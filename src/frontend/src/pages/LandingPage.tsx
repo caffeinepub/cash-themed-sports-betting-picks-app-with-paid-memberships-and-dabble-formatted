@@ -73,7 +73,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="container py-16 bg-gradient-to-b from-transparent to-card/30">
+      <section className="container py-16">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="text-center space-y-4">
             <h2 className="text-3xl md:text-4xl font-bold">Simple, Transparent Pricing</h2>
@@ -169,9 +169,7 @@ export default function LandingPage() {
       </section>
 
       <section className="container py-16">
-        <div className="max-w-4xl mx-auto">
-          <ResponsibleGamblingDisclaimer />
-        </div>
+        <ResponsibleGamblingDisclaimer />
       </section>
     </div>
   );

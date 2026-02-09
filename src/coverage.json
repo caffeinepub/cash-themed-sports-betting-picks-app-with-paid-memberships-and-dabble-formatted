@@ -1,91 +1,52 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T23:28:06.933Z",
+  "generatedAt": "2026-02-09T23:33:01.143Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
-    "implemented": 3,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-16",
-        "summary": "Implement a referral code system in the Motoko backend that allows an admin/creator to generate, list, and revoke referral codes, and allows an authenticated user to redeem a referral code to receive premium access for a configurable duration.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-17",
-        "summary": "Update the backend subscription model to support referral-granted subscriptions distinctly from Stripe subscriptions while remaining compatible with existing premium gating logic (predictions access checks).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-18",
-        "summary": "Add an admin UI section (within the existing Admin page) that allows an admin/creator to generate referral codes with configurable generosity settings and to view/revoke existing referral codes.",
+        "id": "REQ-21",
+        "summary": "Update the global app layout background so it better fills the page and reads as a more vibrant cash theme (greens + gold accents), while keeping content readable in both light and dark modes.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/AdminPage.tsx",
-          "frontend/src/components/ReferralCodesAdminPanel.tsx",
-          "frontend/src/backend.d.ts"
+          "frontend/src/index.css",
+          "frontend/src/components/AppLayout.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AdminPage.tsx",
-          "frontend/src/components/ReferralCodesAdminPanel.tsx",
-          "frontend/src/backend.d.ts"
+          "frontend/src/index.css",
+          "frontend/src/components/AppLayout.tsx"
         ]
       },
       {
-        "id": "REQ-19",
-        "summary": "Add an authenticated user flow to redeem a referral code from the Account page and show clear success/error messaging in English.",
+        "id": "REQ-22",
+        "summary": "Adjust the cash-themed pattern/gradient usage on the landing hero so it looks more vivid and better integrated with the rest of the page background (using the existing generated pattern asset).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/AccountPage.tsx",
-          "frontend/src/components/RedeemReferralCodeCard.tsx"
+          "frontend/src/components/HeroBranding.tsx",
+          "frontend/src/pages/LandingPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AccountPage.tsx",
-          "frontend/src/components/RedeemReferralCodeCard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-20",
-        "summary": "Expose React Query hooks for referral-code admin and redemption actions, following the existing hooks patterns, and ensure relevant queries are invalidated after mutations.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useReferralCodes.ts",
-          "frontend/src/components/ReferralCodesAdminPanel.tsx",
-          "frontend/src/components/RedeemReferralCodeCard.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useReferralCodes.ts",
-          "frontend/src/components/ReferralCodesAdminPanel.tsx",
-          "frontend/src/components/RedeemReferralCodeCard.tsx"
+          "frontend/src/components/HeroBranding.tsx",
+          "frontend/src/pages/LandingPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/RedeemReferralCodeCard.tsx",
-    "frontend/src/components/ReferralCodesAdminPanel.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useReferralCodes.ts",
-    "frontend/src/hooks/useSubscription.ts",
-    "frontend/src/pages/AccountPage.tsx",
-    "frontend/src/pages/AdminPage.tsx",
+    "frontend/src/components/AppLayout.tsx",
+    "frontend/src/components/HeroBranding.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/LandingPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

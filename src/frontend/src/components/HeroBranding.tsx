@@ -2,14 +2,15 @@ export default function HeroBranding() {
   return (
     <div className="relative overflow-hidden py-20 md:py-32">
       <div
-        className="absolute inset-0 opacity-5"
+        className="absolute inset-0 opacity-[0.15]"
         style={{
           backgroundImage: 'url(/assets/generated/cash-pattern.dim_2048x2048.png)',
           backgroundSize: '400px 400px',
           backgroundRepeat: 'repeat',
         }}
       ></div>
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-cash-green/10 via-transparent to-cash-gold/10"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80"></div>
       <div className="container relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="inline-flex items-center justify-center mb-6">

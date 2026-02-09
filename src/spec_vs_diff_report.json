@@ -1,104 +1,32 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T23:28:06.929Z",
-  "summary": "Referral code functionality was added across backend and frontend (new hooks, Account redemption card, Admin tab/panel, backend state/types, and a migration). However, several BuildRequest acceptance criteria appear unimplemented or only partially implemented (notably configurable max uses/expiration and admin listing of full status/usage), and the diff also includes unrelated new frontend features (support/terms/risk-tier/terms gating) that were not requested.",
-  "missing_requirements": [
-    {
-      "id": "REQ-16",
-      "requirement": "Admin-only creation of referral codes must support configurable benefit settings including at minimum premium duration and optional max uses and optional expiration time.",
-      "reason": "Frontend admin panel only captures duration (days) and code; backend type shown only includes a single `validUntil` field and does not show max-uses or optional expiration configuration separate from duration. Hooks call `createReferralCode(code, validForNs)` only.",
-      "evidence": [
-        "frontend/src/components/ReferralCodesAdminPanel.tsx",
-        "frontend/src/hooks/useReferralCodes.ts",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-16",
-      "requirement": "Admin-only method to list existing referral codes with configuration and current usage counts/state (active/revoked).",
-      "reason": "Frontend hook calls `getActiveReferralCodes()` (active-only) and the backend type shown is `ReferralCodeStatus = { code; validUntil }` with no usage counts or revoked/active state. No evidence of listing revoked codes or usage counts.",
-      "evidence": [
-        "frontend/src/hooks/useReferralCodes.ts",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-16",
-      "requirement": "Redeeming enforces limits including max uses (if set) and cannot redeem the same code twice for the same principal (if tracked).",
-      "reason": "No evidence in the shown backend state/types of max-uses counters or per-principal redemption tracking; frontend error mapping references 'already used' but backend enforcement is not evidenced in diff summary.",
-      "evidence": [
-        "backend/main.mo",
-        "frontend/src/components/RedeemReferralCodeCard.tsx"
-      ]
-    },
-    {
-      "id": "REQ-16",
-      "requirement": "All unauthorized calls trap with a clear error (admin-only vs user-only).",
-      "reason": "Diff summary does not show the access-control checks or trap messages for the new admin methods (`createReferralCode`, `revokeReferralCode`, `getActiveReferralCodes`) or user redemption method; only that hooks call these methods.",
-      "evidence": [
-        "backend/main.mo",
-        "frontend/src/hooks/useReferralCodes.ts"
-      ]
-    },
-    {
-      "id": "REQ-17",
-      "requirement": "Redeeming a referral code follows a deterministic rule when the user already has an active subscription (e.g., extend expiration if later) and this rule is documented in code.",
-      "reason": "Backend diff is truncated and does not show the redemption logic or any documented rule for how referral premium interacts with an existing Stripe subscription; only new types (`referral`) and helper mentions are visible.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-18",
-      "requirement": "Admin can configure optional max uses and optional code expiration time when generating a referral code.",
-      "reason": "Admin UI only includes fields for code and premium duration (days). No inputs for max uses or expiration date/time.",
-      "evidence": [
-        "frontend/src/components/ReferralCodesAdminPanel.tsx"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-09T23:33:01.140Z",
+  "summary": "REQ-21 and REQ-22 appear implemented via a new global fixed cash-themed gradient background applied to the body (light/dark variants) and an updated HeroBranding overlay using the existing cash pattern asset with stronger opacity and green/gold gradients. AppLayout now enforces full-viewport height via min-h-screen. There are also some additional, unrequested landing-page visual tweaks (card borders/icons).",
+  "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Added Terms of Service/Terms acceptance gating and related new routes/links (e.g., /terms, TermsAcceptanceGate) beyond the referral-code feature scope.",
-      "reason": "BuildRequest does not request terms pages, terms acceptance flow, or routing changes unrelated to referral codes.",
+      "description": "Additional landing page styling updates to feature cards (cash-gold borders/hover states and icon color tweaks) beyond the requested hero/background adjustments.",
+      "reason": "BuildRequest only asked for global AppLayout background treatment and landing hero pattern/gradient integration; it did not request changing card border colors/hover styling or icon coloring in other landing sections.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend/src/pages/LandingPage.tsx"
       ]
     },
     {
-      "description": "Added 'Send Support' link(s) and support-related routes/pages.",
-      "reason": "BuildRequest does not request support/tipping links or new support routes; it is unrelated to referral codes.",
+      "description": "Introduction of custom cash-themed utility classes (text/bg/border/fill cash green/gold) beyond the explicitly requested background/hero changes.",
+      "reason": "The request focuses on global background and hero background treatment; adding a broader utility palette is not explicitly requested (though it may support the theme work).",
       "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Added/expanded risk-tier UI elements and risk assessment cards/badges in predictions pages and Dabble export format changes.",
-      "reason": "BuildRequest is limited to referral codes + premium access handling; risk-tier presentation changes are out of scope.",
-      "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Expanded Responsible Gambling Disclaimer content with AI learning/accuracy messaging.",
-      "reason": "Not requested by the BuildRequest; unrelated to referral codes.",
-      "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend/src/index.css"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.74,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/RedeemReferralCodeCard.tsx",
-    "frontend/src/components/ReferralCodesAdminPanel.tsx",
-    "frontend/src/hooks/useReferralCodes.ts",
-    "frontend/src/hooks/useSubscription.ts",
-    "frontend/src/pages/AccountPage.tsx",
-    "frontend/src/pages/AdminPage.tsx",
+    "frontend/src/components/AppLayout.tsx",
+    "frontend/src/components/HeroBranding.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/LandingPage.tsx",
     "project_state.json"
   ]
 }

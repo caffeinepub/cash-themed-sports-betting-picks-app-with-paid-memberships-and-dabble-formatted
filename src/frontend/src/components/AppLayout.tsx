@@ -25,7 +25,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   }, [isAuthenticated, profileLoading, isFetched, userProfile]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col">
       <AppHeader />
       <main className="flex-1">{children}</main>
       <AppFooter />

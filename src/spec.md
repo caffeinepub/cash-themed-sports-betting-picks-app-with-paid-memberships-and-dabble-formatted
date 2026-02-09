@@ -1,14 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Add admin-generated referral codes that users can redeem for configurable-duration premium access, without disrupting existing Stripe-based subscriptions or premium gating.
+**Goal:** Make the app background fill the full viewport and look more vibrant with a cash-themed green + gold treatment, while keeping readability in light and dark modes.
 
 **Planned changes:**
-- Add Motoko backend referral-code management: admin-only create (configurable duration; optional max uses; optional expiration), list (including usage counts and active/revoked state), and revoke/disable.
-- Add backend user method to redeem a referral code for the caller, enforcing code validity/limits and applying/extending premium access deterministically.
-- Update backend subscription/premium access model so referral-granted access is recognized by existing premium gating while keeping Stripe subscriptions working unchanged.
-- Update Admin page with a “Referral Codes” section to generate codes, copy to clipboard, view existing codes, and revoke codes (admin-gated).
-- Update Account page with a signed-in “Redeem referral code” flow with clear English success/error messaging and refreshed subscription status after redemption.
-- Add React Query hooks for create/list/revoke/redeem referral codes and invalidate/refetch relevant queries (referral codes list; `['subscription']`) after mutations.
+- Update `AppLayout` global background styling so it consistently extends to full viewport height across all routes and avoids any blank bands above/below content.
+- Adjust the landing hero background treatment to keep using the existing cash pattern image but with more vivid opacity/overlay/gradient settings, and a smoother transition into the page background.
+- Ensure no layout overflow is introduced (especially preventing unintended horizontal scrolling on mobile/desktop) and preserve text/card contrast in both light and dark themes.
 
-**User-visible outcome:** Admins can generate, view, and revoke referral codes; signed-in users can redeem a code from their Account page to gain/extend premium access, and premium-gated features recognize the updated access immediately.
+**User-visible outcome:** All pages have a consistent, full-height, vibrant cash-themed background, and the landing hero feels more integrated and vivid without hurting readability in light or dark mode.

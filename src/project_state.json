@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
+  "projectStateVersion": 11,
   "summary": "Build a colorful, cash-themed sports betting predictions app with paid monthly/yearly memberships, AI-driven picks tailored to the Dabble platform, a tiered risk/reward presentation system, and prominent disclaimers/terms (including no-guarantee and limited liability), with optional Cash App–friendly UI elements like displaying a $Cashtag for manual tips (no direct Cash App integration).",
   "architectural_notes": [
     "Do not implement direct Cash App transfers or routing funds to a personal $Cashtag; only manual display of $Cashtag for optional tips/donations is allowed.",
@@ -145,6 +145,22 @@
         "REQ-20"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-global-app-layout-background-so-it-better-fills-the-page-and-reads-as-a-more-vibrant-cash-theme-greens-gold-accents-while-keeping-content-readable-in-both-light-and-dark-modes",
+      "title": "Update the global app layout background so it better fills the page and reads as a more vibrant cash theme (greens + gold accents), while keeping content readable in both light and dark modes.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-adjust-the-cash-themed-pattern-gradient-usage-on-the-landing-hero-so-it-looks-more-vivid-and-better-integrated-with-the-rest-of-the-page-background-using-the-existing-generated-pattern-asset",
+      "title": "Adjust the cash-themed pattern/gradient usage on the landing hero so it looks more vivid and better integrated with the rest of the page background (using the existing generated pattern asset).",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -230,6 +246,12 @@
       "reqIds": [
         "REQ-17"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Update UI background styling to better fit the page layout and use a more vibrant cash-themed background.",
+      "reqIds": [],
       "status": "pending"
     }
   ],
