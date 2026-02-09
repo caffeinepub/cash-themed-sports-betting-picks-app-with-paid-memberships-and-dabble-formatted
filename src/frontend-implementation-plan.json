@@ -1,0 +1,82 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Referral codes: admin management + user redemption UI and hooks",
+  "requirements": [
+    {
+      "id": "REQ-18",
+      "summary": "Add a Referral Codes section within the existing Admin page to create, list, copy, and revoke referral codes.",
+      "acceptanceCriteria": [
+        "Admin page includes a new tab/section labeled in English (e.g., “Referral Codes”).",
+        "Admin can enter referral code configuration (at minimum: duration of premium access; optional: max uses; optional: code expiration) and generate a code.",
+        "After generation, the UI shows the generated code and allows easy copy-to-clipboard.",
+        "Admin can view a list/table of existing codes and revoke a selected code.",
+        "Non-admin users cannot access this admin UI (existing AdminGate behavior remains in place)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminPage.tsx",
+          "operation": "modify",
+          "description": "Add a new TabsTrigger/TabsContent labeled \"Referral Codes\" to the existing Admin panel Tabs, and render the new ReferralCodesAdminPanel component inside it. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/ReferralCodesAdminPanel.tsx",
+          "operation": "create",
+          "description": "Create an admin-only panel UI for referral code generation and management: inputs for duration (required) and optional max uses + optional expiration; button to generate; display generated code with copy-to-clipboard; show a list/table of existing referral codes and a revoke action per row; all user-facing text in English. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/backend.d.ts",
+          "operation": "modify",
+          "description": "Update frontend backend type definitions to match the referral code admin capabilities needed by the Admin UI (create/list/revoke), including any new types for referral code configuration and list row/status fields (e.g., usage counts, revoked/active state, expiration)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-19",
+      "summary": "Add an authenticated Account page flow to redeem a referral code with clear success/error messages and refresh subscription UI after redemption.",
+      "acceptanceCriteria": [
+        "Account page displays a “Redeem referral code” section for signed-in users with an input and submit button.",
+        "Submitting calls the backend redeem method and shows a success toast/message when redeemed; shows a specific error message for invalid/expired/revoked/overused codes.",
+        "After a successful redemption, the subscription query is refreshed and the subscription status UI reflects the updated active access state."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AccountPage.tsx",
+          "operation": "modify",
+          "description": "Add a \"Redeem referral code\" section (shown only when authenticated) with an input + submit button; wire it to a redeem mutation hook; display English success and error messaging; ensure the page refreshes subscription status UI after successful redemption (via query invalidation/refetch). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/RedeemReferralCodeCard.tsx",
+          "operation": "create",
+          "description": "Create a reusable Account UI card for redeeming a referral code: controlled input, submit button with loading state, and English success/error messaging; designed to be embedded in AccountPage. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-20",
+      "summary": "Provide React Query hooks for referral-code admin actions and user redemption, with correct query invalidation.",
+      "acceptanceCriteria": [
+        "Frontend has hooks for: create referral code, list referral codes (admin), revoke referral code (admin), redeem referral code (user).",
+        "On redeem, the ['subscription'] query is invalidated/refetched so PremiumGate and Account status update without a manual reload.",
+        "On admin create/revoke, the referral codes list query is invalidated/refetched so the list updates immediately."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useReferralCodes.ts",
+          "operation": "create",
+          "description": "Add React Query hooks following existing patterns: useListReferralCodes (admin list), useCreateReferralCode (admin create), useRevokeReferralCode (admin revoke), useRedeemReferralCode (user redeem). Ensure mutations invalidate/refetch ['referralCodes'] (admin create/revoke) and ['subscription'] (redeem). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/ReferralCodesAdminPanel.tsx",
+          "operation": "modify",
+          "description": "Wire the admin panel UI to the referral code hooks: list query for table rendering; create mutation for generation; revoke mutation per code; ensure immediate list refresh via invalidation. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/RedeemReferralCodeCard.tsx",
+          "operation": "modify",
+          "description": "Wire the redeem UI to useRedeemReferralCode; map backend errors into specific English messages for invalid/expired/revoked/overused cases; ensure redeem triggers ['subscription'] invalidation so AccountPage and PremiumGate reflect access changes. Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}

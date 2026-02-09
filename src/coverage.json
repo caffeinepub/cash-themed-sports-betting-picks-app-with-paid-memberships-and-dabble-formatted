@@ -1,0 +1,94 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-09T23:28:06.933Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 5,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-16",
+        "summary": "Implement a referral code system in the Motoko backend that allows an admin/creator to generate, list, and revoke referral codes, and allows an authenticated user to redeem a referral code to receive premium access for a configurable duration.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-17",
+        "summary": "Update the backend subscription model to support referral-granted subscriptions distinctly from Stripe subscriptions while remaining compatible with existing premium gating logic (predictions access checks).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-18",
+        "summary": "Add an admin UI section (within the existing Admin page) that allows an admin/creator to generate referral codes with configurable generosity settings and to view/revoke existing referral codes.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AdminPage.tsx",
+          "frontend/src/components/ReferralCodesAdminPanel.tsx",
+          "frontend/src/backend.d.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/AdminPage.tsx",
+          "frontend/src/components/ReferralCodesAdminPanel.tsx",
+          "frontend/src/backend.d.ts"
+        ]
+      },
+      {
+        "id": "REQ-19",
+        "summary": "Add an authenticated user flow to redeem a referral code from the Account page and show clear success/error messaging in English.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AccountPage.tsx",
+          "frontend/src/components/RedeemReferralCodeCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/AccountPage.tsx",
+          "frontend/src/components/RedeemReferralCodeCard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-20",
+        "summary": "Expose React Query hooks for referral-code admin and redemption actions, following the existing hooks patterns, and ensure relevant queries are invalidated after mutations.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useReferralCodes.ts",
+          "frontend/src/components/ReferralCodesAdminPanel.tsx",
+          "frontend/src/components/RedeemReferralCodeCard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useReferralCodes.ts",
+          "frontend/src/components/ReferralCodesAdminPanel.tsx",
+          "frontend/src/components/RedeemReferralCodeCard.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/RedeemReferralCodeCard.tsx",
+    "frontend/src/components/ReferralCodesAdminPanel.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useReferralCodes.ts",
+    "frontend/src/hooks/useSubscription.ts",
+    "frontend/src/pages/AccountPage.tsx",
+    "frontend/src/pages/AdminPage.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

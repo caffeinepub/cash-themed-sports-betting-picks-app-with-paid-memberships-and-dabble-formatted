@@ -1,0 +1,72 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-an-admin-ui-section-within-the-existing-admin-page-that-allows-an-admin-creator-to-generate-referral-codes-with-configurable-generosity-settings-and-to-view-revoke-existing-referral-codes",
+      "featureTitle": "Add an admin UI section (within the existing Admin page) that allows an admin/creator to generate referral codes with configurable generosity settings and to view/revoke existing referral codes.",
+      "files": [
+        "frontend/src/components/ReferralCodesAdminPanel.tsx",
+        "frontend/src/pages/AdminPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-18"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-an-authenticated-user-flow-to-redeem-a-referral-code-from-the-account-page-and-show-clear-success-error-messaging-in-english",
+      "featureTitle": "Add an authenticated user flow to redeem a referral code from the Account page and show clear success/error messaging in English.",
+      "files": [
+        "frontend/src/components/RedeemReferralCodeCard.tsx",
+        "frontend/src/pages/AccountPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-19"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-expose-react-query-hooks-for-referral-code-admin-and-redemption-actions-following-the-existing-hooks-patterns-and-ensure-relevant-queries-are-invalidated-after-mutations",
+      "featureTitle": "Expose React Query hooks for referral-code admin and redemption actions, following the existing hooks patterns, and ensure relevant queries are invalidated after mutations.",
+      "files": [
+        "frontend/src/components/RedeemReferralCodeCard.tsx",
+        "frontend/src/components/ReferralCodesAdminPanel.tsx",
+        "frontend/src/hooks/useReferralCodes.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-20"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

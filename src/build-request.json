@@ -1,0 +1,127 @@
+{
+  "kind": "build_request",
+  "title": "Add admin-generated referral codes that grant configurable premium access",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-16",
+      "text": "Implement a referral code system in the Motoko backend that allows an admin/creator to generate, list, and revoke referral codes, and allows an authenticated user to redeem a referral code to receive premium access for a configurable duration.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make referral codes give me access to generate referral codes with the ability to be as generous as I please"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes admin-only methods to create referral codes with configurable benefit settings (at minimum: premium access duration; also allow optional max uses and optional expiration time for the code).",
+        "Backend exposes an admin-only method to list existing referral codes with their configuration and current usage counts/state (active/revoked).",
+        "Backend exposes an admin-only method to revoke/disable a referral code so it can no longer be redeemed.",
+        "Backend exposes a user method to redeem a referral code for the caller; redeeming applies/extends the caller’s premium access accordingly.",
+        "Redeeming enforces code state and limits (e.g., cannot redeem revoked/expired codes; cannot exceed max uses if set; cannot redeem the same code twice for the same principal if the backend tracks per-principal redemption).",
+        "All unauthorized calls trap with a clear error (admin-only vs user-only)."
+      ]
+    },
+    {
+      "id": "REQ-17",
+      "text": "Update the backend subscription model to support referral-granted subscriptions distinctly from Stripe subscriptions while remaining compatible with existing premium gating logic (predictions access checks).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make referral codes give me access to generate referral codes with the ability to be as generous as I please"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A redeemed referral code results in the caller having an active premium access state that is recognized by existing subscription checks used for premium gating (e.g., prediction queries remain accessible while the referral access is active).",
+        "Stripe-based subscriptions continue to work unchanged (creating checkout sessions, activating subscriptions, and checking subscription status).",
+        "If a user already has an active subscription, redeeming a referral code follows a deterministic rule (documented in code) such as extending the expiration if later, rather than accidentally shortening access."
+      ]
+    },
+    {
+      "id": "REQ-18",
+      "text": "Add an admin UI section (within the existing Admin page) that allows an admin/creator to generate referral codes with configurable generosity settings and to view/revoke existing referral codes.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make referral codes give me access to generate referral codes with the ability to be as generous as I please"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin page includes a new tab/section labeled in English (e.g., “Referral Codes”).",
+        "Admin can enter referral code configuration (at minimum: duration of premium access; optional: max uses; optional: code expiration) and generate a code.",
+        "After generation, the UI shows the generated code and allows easy copy-to-clipboard.",
+        "Admin can view a list/table of existing codes and revoke a selected code.",
+        "Non-admin users cannot access this admin UI (existing AdminGate behavior remains in place)."
+      ]
+    },
+    {
+      "id": "REQ-19",
+      "text": "Add an authenticated user flow to redeem a referral code from the Account page and show clear success/error messaging in English.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make referral codes give me access to generate referral codes with the ability to be as generous as I please"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Account page displays a “Redeem referral code” section for signed-in users with an input and submit button.",
+        "Submitting calls the backend redeem method and shows a success toast/message when redeemed; shows a specific error message for invalid/expired/revoked/overused codes.",
+        "After a successful redemption, the subscription query is refreshed and the subscription status UI reflects the updated active access state."
+      ]
+    },
+    {
+      "id": "REQ-20",
+      "text": "Expose React Query hooks for referral-code admin and redemption actions, following the existing hooks patterns, and ensure relevant queries are invalidated after mutations.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make referral codes give me access to generate referral codes with the ability to be as generous as I please"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Frontend has hooks for: create referral code, list referral codes (admin), revoke referral code (admin), redeem referral code (user).",
+        "On redeem, the ['subscription'] query is invalidated/refetched so PremiumGate and Account status update without a manual reload.",
+        "On admin create/revoke, the referral codes list query is invalidated/refetched so the list updates immediately."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single-actor Motoko canister; add referral-code logic to backend/main.mo (do not introduce additional backend services).",
+    "Do not edit any files under frontend/src/components/ui or any paths listed in frontend.immutablePaths.",
+    "Keep all user-facing text in English.",
+    "Do not add third-party authentication; keep Internet Identity as the login mechanism."
+  ],
+  "nonGoals": [
+    "Do not implement Stripe coupon/discount integration or discounted payments through Stripe as part of referral codes.",
+    "Do not implement external database storage or any off-chain data store for referral codes.",
+    "Do not implement marketing analytics, email sending, or referral tracking dashboards beyond basic code listing/usage counts."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

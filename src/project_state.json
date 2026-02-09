@@ -1,0 +1,240 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 9,
+  "summary": "Build a colorful, cash-themed sports betting predictions app with paid monthly/yearly memberships, AI-driven picks tailored to the Dabble platform, a tiered risk/reward presentation system, and prominent disclaimers/terms (including no-guarantee and limited liability), with optional Cash App–friendly UI elements like displaying a $Cashtag for manual tips (no direct Cash App integration).",
+  "architectural_notes": [
+    "Do not implement direct Cash App transfers or routing funds to a personal $Cashtag; only manual display of $Cashtag for optional tips/donations is allowed.",
+    "Payments/subscriptions are handled via Stripe; no third-party Cash App payment integration.",
+    "Authentication remains via Internet Identity; email is collected/stored only as an optional user-profile attribute (not used as the login credential)."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-implement-paid-membership-plans-25-month-and-250-year-with-subscription-based-access-control-to-premium-prediction-content",
+      "title": "Implement paid membership plans ($25/month and $250/year) with subscription-based access control to premium prediction content.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-authentication-via-internet-identity-and-connect-the-authenticated-principal-to-a-user-profile-record-in-the-backend",
+      "title": "Add authentication via Internet Identity and connect the authenticated principal to a user profile record in the backend.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-provide-a-predictions-feature-that-lets-the-app-generate-and-display-sports-betting-picks-using-a-transparent-configurable-scoring-model-that-considers-depth-chart-injury-status-coaching-style-and-player-news-factors-provided-to-the-system",
+      "title": "Provide a predictions feature that lets the app generate and display sports betting picks using a transparent, configurable scoring model that considers depth chart, injury status, coaching style, and player/news factors provided to the system.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-admin-only-workflow-to-input-and-manage-the-data-needed-for-predictions-depth-charts-injuries-coaching-style-notes-and-news-drama-flags-without-claiming-full-web-scraping",
+      "title": "Create an admin-only workflow to input and manage the data needed for predictions (depth charts, injuries, coaching style notes, and news/drama flags) without claiming full-web scraping.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-present-picks-in-a-dabble-aligned-format-and-provide-a-copy-export-view-optimized-for-entering-bets-on-dabble-without-requiring-dabble-api-integration",
+      "title": "Present picks in a Dabble-aligned format and provide a copy/export view optimized for entering bets on Dabble (without requiring Dabble API integration).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-design-the-ui-with-a-colorful-rich-cash-theme-greens-gold-accents-high-contrast-neutrals-applied-consistently-across-navigation-cards-buttons-and-data-visualizations",
+      "title": "Design the UI with a colorful, rich 'cash theme' (greens, gold accents, high-contrast neutrals), applied consistently across navigation, cards, buttons, and data visualizations.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-landing-page-that-explains-the-membership-plans-what-factors-are-considered-in-predictions-and-includes-clear-disclaimers-that-results-are-not-guaranteed-and-content-is-informational",
+      "title": "Add a landing page that explains the membership plans, what factors are considered in predictions, and includes clear disclaimers that results are not guaranteed and content is informational.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-store-and-serve-prediction-history-so-subscribers-can-browse-past-picks-and-filter-by-sport-date-market",
+      "title": "Store and serve prediction history so subscribers can browse past picks and filter by sport/date/market.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-include-required-static-image-assets-for-the-cash-themed-brand-stored-under-frontend-public-assets-generated-and-render-them-in-the-ui-e-g-logo-on-header-landing-subtle-background-pattern",
+      "title": "Generate and include required static image assets for the cash-themed brand, stored under frontend/public/assets/generated, and render them in the UI (e.g., logo on header/landing, subtle background pattern).",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-dedicated-send-support-screen-that-displays-the-creator-s-cash-app-cashtag-and-a-cash-app-link-without-enabling-any-in-app-cash-app-payments-or-automated-fund-routing",
+      "title": "Add a dedicated “Send Support” screen that displays the creator’s Cash App $Cashtag and a cash.app link, without enabling any in-app Cash App payments or automated fund routing.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-tiered-risk-system-for-predictions-from-least-risky-low-reward-to-most-risky-high-reward-and-display-the-tier-consistently-throughout-the-predictions-experience",
+      "title": "Implement a tiered risk system for predictions (from least risky/low reward to most risky/high reward) and display the tier consistently throughout the predictions experience.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-expanded-disclaimers-and-a-terms-of-service-acceptance-flow-covering-1-predictions-are-not-guaranteed-2-the-system-may-improve-with-usage-over-time-but-can-still-be-inaccurate-and-3-users-must-agree-to-terms-including-limitation-of-liability-before-using-the-app-s-content",
+      "title": "Add expanded disclaimers and a Terms of Service acceptance flow covering: (1) predictions are not guaranteed, (2) the system may improve with usage over time but can still be inaccurate, and (3) users must agree to Terms including limitation of liability before using the app’s content.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-profile-setup-flow-shown-after-first-internet-identity-login-to-save-name-and-optional-email-using-the-new-backend-profile-update-method-ensuring-the-app-never-submits-a-payload-that-could-clear-subscription-keep-all-user-facing-text-in-english",
+      "title": "Update the profile setup flow shown after first Internet Identity login to save `name` and optional `email` using the new backend profile update method, ensuring the app never submits a payload that could clear `subscription`. Keep all user-facing text in English.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-editable-fields-on-the-account-page-to-let-an-authenticated-user-add-or-change-their-email-address-and-name-after-signup-and-save-changes-via-the-new-backend-profile-update-method-keep-internet-identity-as-the-login-mechanism-do-not-add-email-password-auth",
+      "title": "Add editable fields on the Account page to let an authenticated user add or change their email address and name after signup, and save changes via the new backend profile update method. Keep Internet Identity as the login mechanism (do not add email/password auth).",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-ui-section-within-the-existing-admin-page-that-allows-an-admin-creator-to-generate-referral-codes-with-configurable-generosity-settings-and-to-view-revoke-existing-referral-codes",
+      "title": "Add an admin UI section (within the existing Admin page) that allows an admin/creator to generate referral codes with configurable generosity settings and to view/revoke existing referral codes.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-authenticated-user-flow-to-redeem-a-referral-code-from-the-account-page-and-show-clear-success-error-messaging-in-english",
+      "title": "Add an authenticated user flow to redeem a referral code from the Account page and show clear success/error messaging in English.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-expose-react-query-hooks-for-referral-code-admin-and-redemption-actions-following-the-existing-hooks-patterns-and-ensure-relevant-queries-are-invalidated-after-mutations",
+      "title": "Expose React Query hooks for referral-code admin and redemption actions, following the existing hooks patterns, and ensure relevant queries are invalidated after mutations.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Implement paid memberships: $25/month and $250/year subscription plans with access control to premium prediction content.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "AI sports betting prediction engine aiming for high accuracy, incorporating depth charts, injury reports, coaching styles, and player news/drama factors.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Data aggregation pipeline to comb the web for relevant sports data (injuries, depth charts, news) and normalize it for the prediction engine.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Dabble platform alignment: format and present bets/picks specifically based on the Dabble platform structure/markets.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Design and UI theme: colorful, rich, cash-themed visual design across the app.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add a tiered risk system for picks (from least risky/low reward to most risky/high reward) and display tiers throughout the predictions UX.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add disclaimers/Terms of Service acceptance messaging: AI improves with use but may be inaccurate; results not guaranteed; informational only; users agree to terms and liability limitations.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Add a Cash App–friendly UI option: a dedicated 'Send Support' screen that displays a creator $Cashtag for optional manual tips/donations (no in-app Cash App payments).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Add an optional email field to the user profile with UI during signup/onboarding (or Account page) so users can store/show their email address (e.g., for receipts/account info) alongside Internet Identity auth.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Add a backend update method for the authenticated user's profile that allows setting/updating `name` and `email` without clearing or overwriting any existing `subscription` data.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Add a referral code system with an admin/creator interface to generate referral codes and configure how generous each code is (e.g., discount amount, free access duration, or other benefit levels).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Implement a referral code system in the Motoko backend that allows an admin/creator to generate, list, and revoke referral codes, and allows an authenticated user to redeem a referral code to receive premium access for a configurable duration.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Update the backend subscription model to support referral-granted subscriptions distinctly from Stripe subscriptions while remaining compatible with existing premium gating logic (predictions access checks).",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Cash-themed sports betting picks app with paid memberships and Dabble-formatted predictions",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
