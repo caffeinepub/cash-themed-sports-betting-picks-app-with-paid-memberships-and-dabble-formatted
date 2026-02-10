@@ -83,6 +83,15 @@ export interface http_request_result {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export interface LiveScore {
+    status: string;
+    currentPeriod: string;
+    homeTeam: string;
+    lastUpdated: Time;
+    homeScore: bigint;
+    awayTeam: string;
+    awayScore: bigint;
+}
 export interface ShoppingItem {
     productName: string;
     currency: string;
@@ -90,6 +99,7 @@ export interface ShoppingItem {
     priceInCents: bigint;
     productDescription: string;
 }
+export type GameId = string;
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
@@ -152,6 +162,7 @@ export interface backendInterface {
     addUpcomingMatch(matchId: string): Promise<void>;
     adminPremiumDiagnosis(target: Principal): Promise<AdminPremiumDiagnosis>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    batchUpdateLiveScores(scores: Array<[GameId, LiveScore]>): Promise<void>;
     checkPremiumStatus(): Promise<PremiumSource>;
     checkSubscriptionStatus(): Promise<SubscriptionStatus | null>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
@@ -159,12 +170,24 @@ export interface backendInterface {
     createReferralCode(code: string, validForNs: Time): Promise<void>;
     deletePrediction(predictionId: string): Promise<void>;
     getActiveReferralCodes(): Promise<Array<ReferralCodeStatus>>;
+    getAllLiveScores(): Promise<Array<LiveScore>>;
     getAllPredictions(): Promise<Array<Prediction>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCoachingStyle(teamSportKey: string): Promise<string | null>;
     getDepthChart(teamSportKey: string): Promise<string | null>;
+    getFinalScores(): Promise<Array<LiveScore>>;
+    getGamesInProgress(): Promise<Array<LiveScore>>;
     getInjuryReport(playerTeamKey: string): Promise<string | null>;
+    getLiveMatchesSummary(): Promise<{
+        total: bigint;
+        finals: bigint;
+        inProgress: bigint;
+    }>;
+    getLiveScore(gameId: GameId): Promise<LiveScore | null>;
+    getLiveScoresByLeague(_league: string): Promise<Array<LiveScore>>;
+    getLiveScoresBySport(_sport: SportsCategory): Promise<Array<LiveScore>>;
+    getLiveScoresByTeam(teamName: string): Promise<Array<LiveScore>>;
     getNewsFlag(key: string): Promise<string | null>;
     getPrediction(predictionId: string): Promise<Prediction | null>;
     getPredictionsByDateRange(startTime: Time, endTime: Time): Promise<Array<Prediction>>;
@@ -177,6 +200,8 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
     redeemReferralCode(code: string): Promise<void>;
+    removeFinishedGames(): Promise<void>;
+    removeLiveScore(gameId: GameId): Promise<void>;
     removeUpcomingMatch(matchId: string): Promise<void>;
     revokeManualPremiumAccess(user: Principal): Promise<void>;
     revokeReferralCode(code: string): Promise<void>;
@@ -187,6 +212,7 @@ export interface backendInterface {
     setNewsFlag(key: string, data: string): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
+    updateLiveScore(gameId: GameId, score: LiveScore): Promise<void>;
     updatePrediction(prediction: Prediction): Promise<void>;
     updateUserProfileData(name: string, email: string | null): Promise<void>;
 }

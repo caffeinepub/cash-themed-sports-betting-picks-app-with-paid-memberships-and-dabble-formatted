@@ -1,97 +1,49 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T00:40:35.822Z",
+  "generatedAt": "2026-02-10T01:22:54.735Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
-    "implemented": 3,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-33",
-        "summary": "Ensure the configured creator/admin principal always has premium access in all backend premium checks, regardless of any stored UserProfile data (including missing profile, expired Stripe subscription, expired referral, or hasManualPremium=false).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-34",
-        "summary": "Add an admin support backend API that allows an admin to diagnose a specific user’s premium access by principal, returning (at minimum) the target user’s UserProfile (if any) and a computed premium status/source consistent with the same logic used for premium gating.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-35",
-        "summary": "Add an “Admin Support” section to the existing Admin page UI that lets an admin enter a user Principal ID, fetch the user’s access diagnostic report, and display clear English status details (premium active/inactive, premium source, relevant expirations, and whether a manual premium grant is set).",
+        "id": "REQ-43",
+        "summary": "Update the Predictions list page to refresh predictions data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating and terms gating behavior unchanged.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useAdminPremiumDiagnosis.ts",
-          "frontend/src/components/AdminSupportCard.tsx",
-          "frontend/src/pages/AdminPage.tsx"
+          "frontend/src/utils/refetchIntervals.ts",
+          "frontend/src/pages/PredictionsPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useAdminPremiumDiagnosis.ts",
-          "frontend/src/components/AdminSupportCard.tsx",
-          "frontend/src/pages/AdminPage.tsx"
+          "frontend/src/utils/refetchIntervals.ts",
+          "frontend/src/pages/PredictionsPage.tsx"
         ]
       },
       {
-        "id": "REQ-36",
-        "summary": "Extend the admin manual premium tooling so admins can both grant and revoke manual premium access for a specified Principal ID, and ensure the Admin Support UI reflects changes immediately after either action.",
+        "id": "REQ-44",
+        "summary": "Update the Prediction detail page to refresh the selected prediction data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating, terms gating, and live score updates unchanged.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useManualPremiumRevoke.ts",
-          "frontend/src/hooks/useManualPremiumGrant.ts",
-          "frontend/src/components/ManualPremiumGrantCard.tsx",
-          "frontend/src/components/AdminSupportCard.tsx"
+          "frontend/src/pages/PredictionDetailPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useManualPremiumRevoke.ts",
-          "frontend/src/hooks/useManualPremiumGrant.ts",
-          "frontend/src/components/ManualPremiumGrantCard.tsx",
-          "frontend/src/components/AdminSupportCard.tsx"
-        ]
-      },
-      {
-        "id": "REQ-37",
-        "summary": "Ensure premium gating remains consistent across the app by relying on backend-reported premium status for access decisions, so the creator/admin account never sees the premium upsell in PremiumGate-protected screens.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/PremiumGate.tsx",
-          "frontend/src/pages/AccountPage.tsx",
-          "frontend/src/hooks/useSubscription.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/PremiumGate.tsx",
-          "frontend/src/pages/AccountPage.tsx",
-          "frontend/src/hooks/useSubscription.ts"
+          "frontend/src/pages/PredictionDetailPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/AdminSupportCard.tsx",
-    "frontend/src/components/ManualPremiumGrantCard.tsx",
-    "frontend/src/components/PremiumGate.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useAdminPremiumDiagnosis.ts",
-    "frontend/src/hooks/useManualPremiumGrant.ts",
-    "frontend/src/hooks/useManualPremiumRevoke.ts",
-    "frontend/src/hooks/useSubscription.ts",
-    "frontend/src/pages/AccountPage.tsx",
-    "frontend/src/pages/AdminPage.tsx",
+    "frontend/src/pages/PredictionDetailPage.tsx",
+    "frontend/src/pages/PredictionsPage.tsx",
+    "frontend/src/utils/refetchIntervals.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

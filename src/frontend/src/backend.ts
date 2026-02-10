@@ -165,6 +165,15 @@ export interface http_request_result {
     body: Uint8Array;
     headers: Array<http_header>;
 }
+export interface LiveScore {
+    status: string;
+    currentPeriod: string;
+    homeTeam: string;
+    lastUpdated: Time;
+    homeScore: bigint;
+    awayTeam: string;
+    awayScore: bigint;
+}
 export interface ShoppingItem {
     productName: string;
     currency: string;
@@ -172,6 +181,7 @@ export interface ShoppingItem {
     priceInCents: bigint;
     productDescription: string;
 }
+export type GameId = string;
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
@@ -235,6 +245,7 @@ export interface backendInterface {
     addUpcomingMatch(matchId: string): Promise<void>;
     adminPremiumDiagnosis(target: Principal): Promise<AdminPremiumDiagnosis>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    batchUpdateLiveScores(scores: Array<[GameId, LiveScore]>): Promise<void>;
     checkPremiumStatus(): Promise<PremiumSource>;
     checkSubscriptionStatus(): Promise<SubscriptionStatus | null>;
     createCheckoutSession(items: Array<ShoppingItem>, successUrl: string, cancelUrl: string): Promise<string>;
@@ -242,12 +253,24 @@ export interface backendInterface {
     createReferralCode(code: string, validForNs: Time): Promise<void>;
     deletePrediction(predictionId: string): Promise<void>;
     getActiveReferralCodes(): Promise<Array<ReferralCodeStatus>>;
+    getAllLiveScores(): Promise<Array<LiveScore>>;
     getAllPredictions(): Promise<Array<Prediction>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCoachingStyle(teamSportKey: string): Promise<string | null>;
     getDepthChart(teamSportKey: string): Promise<string | null>;
+    getFinalScores(): Promise<Array<LiveScore>>;
+    getGamesInProgress(): Promise<Array<LiveScore>>;
     getInjuryReport(playerTeamKey: string): Promise<string | null>;
+    getLiveMatchesSummary(): Promise<{
+        total: bigint;
+        finals: bigint;
+        inProgress: bigint;
+    }>;
+    getLiveScore(gameId: GameId): Promise<LiveScore | null>;
+    getLiveScoresByLeague(_league: string): Promise<Array<LiveScore>>;
+    getLiveScoresBySport(_sport: SportsCategory): Promise<Array<LiveScore>>;
+    getLiveScoresByTeam(teamName: string): Promise<Array<LiveScore>>;
     getNewsFlag(key: string): Promise<string | null>;
     getPrediction(predictionId: string): Promise<Prediction | null>;
     getPredictionsByDateRange(startTime: Time, endTime: Time): Promise<Array<Prediction>>;
@@ -260,6 +283,8 @@ export interface backendInterface {
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
     redeemReferralCode(code: string): Promise<void>;
+    removeFinishedGames(): Promise<void>;
+    removeLiveScore(gameId: GameId): Promise<void>;
     removeUpcomingMatch(matchId: string): Promise<void>;
     revokeManualPremiumAccess(user: Principal): Promise<void>;
     revokeReferralCode(code: string): Promise<void>;
@@ -270,10 +295,11 @@ export interface backendInterface {
     setNewsFlag(key: string, data: string): Promise<void>;
     setStripeConfiguration(config: StripeConfiguration): Promise<void>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
+    updateLiveScore(gameId: GameId, score: LiveScore): Promise<void>;
     updatePrediction(prediction: Prediction): Promise<void>;
     updateUserProfileData(name: string, email: string | null): Promise<void>;
 }
-import type { AdminPremiumDiagnosis as _AdminPremiumDiagnosis, BettingMarket as _BettingMarket, Prediction as _Prediction, PremiumSource as _PremiumSource, ReferralStatus as _ReferralStatus, SportsCategory as _SportsCategory, StripeSessionStatus as _StripeSessionStatus, SubscriptionPlan as _SubscriptionPlan, SubscriptionStatus as _SubscriptionStatus, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { AdminPremiumDiagnosis as _AdminPremiumDiagnosis, BettingMarket as _BettingMarket, LiveScore as _LiveScore, Prediction as _Prediction, PremiumSource as _PremiumSource, ReferralStatus as _ReferralStatus, SportsCategory as _SportsCategory, StripeSessionStatus as _StripeSessionStatus, SubscriptionPlan as _SubscriptionPlan, SubscriptionStatus as _SubscriptionStatus, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -343,6 +369,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n17(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async batchUpdateLiveScores(arg0: Array<[GameId, LiveScore]>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.batchUpdateLiveScores(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.batchUpdateLiveScores(arg0);
             return result;
         }
     }
@@ -444,6 +484,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getAllLiveScores(): Promise<Array<LiveScore>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllLiveScores();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllLiveScores();
+            return result;
+        }
+    }
     async getAllPredictions(): Promise<Array<Prediction>> {
         if (this.processError) {
             try {
@@ -514,6 +568,34 @@ export class Backend implements backendInterface {
             return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getFinalScores(): Promise<Array<LiveScore>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getFinalScores();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getFinalScores();
+            return result;
+        }
+    }
+    async getGamesInProgress(): Promise<Array<LiveScore>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getGamesInProgress();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getGamesInProgress();
+            return result;
+        }
+    }
     async getInjuryReport(arg0: string): Promise<string | null> {
         if (this.processError) {
             try {
@@ -526,6 +608,80 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getInjuryReport(arg0);
             return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getLiveMatchesSummary(): Promise<{
+        total: bigint;
+        finals: bigint;
+        inProgress: bigint;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLiveMatchesSummary();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLiveMatchesSummary();
+            return result;
+        }
+    }
+    async getLiveScore(arg0: GameId): Promise<LiveScore | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLiveScore(arg0);
+                return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLiveScore(arg0);
+            return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getLiveScoresByLeague(arg0: string): Promise<Array<LiveScore>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLiveScoresByLeague(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLiveScoresByLeague(arg0);
+            return result;
+        }
+    }
+    async getLiveScoresBySport(arg0: SportsCategory): Promise<Array<LiveScore>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLiveScoresBySport(to_candid_SportsCategory_n21(this._uploadFile, this._downloadFile, arg0));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLiveScoresBySport(to_candid_SportsCategory_n21(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async getLiveScoresByTeam(arg0: string): Promise<Array<LiveScore>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLiveScoresByTeam(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLiveScoresByTeam(arg0);
+            return result;
         }
     }
     async getNewsFlag(arg0: string): Promise<string | null> {
@@ -546,14 +702,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getPrediction(arg0);
-                return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPrediction(arg0);
-            return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n35(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPredictionsByDateRange(arg0: Time, arg1: Time): Promise<Array<Prediction>> {
@@ -602,14 +758,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getStripeSessionStatus(arg0);
-                return from_candid_StripeSessionStatus_n35(this._uploadFile, this._downloadFile, result);
+                return from_candid_StripeSessionStatus_n36(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStripeSessionStatus(arg0);
-            return from_candid_StripeSessionStatus_n35(this._uploadFile, this._downloadFile, result);
+            return from_candid_StripeSessionStatus_n36(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUpcomingMatches(): Promise<Array<string>> {
@@ -696,6 +852,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async removeFinishedGames(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeFinishedGames();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeFinishedGames();
+            return result;
+        }
+    }
+    async removeLiveScore(arg0: GameId): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeLiveScore(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeLiveScore(arg0);
+            return result;
+        }
+    }
     async removeUpcomingMatch(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -741,14 +925,14 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n38(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n39(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n38(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n39(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -836,6 +1020,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateLiveScore(arg0: GameId, arg1: LiveScore): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateLiveScore(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateLiveScore(arg0, arg1);
+            return result;
+        }
+    }
     async updatePrediction(arg0: Prediction): Promise<void> {
         if (this.processError) {
             try {
@@ -853,14 +1051,14 @@ export class Backend implements backendInterface {
     async updateUserProfileData(arg0: string, arg1: string | null): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n42(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n43(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n42(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n43(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
@@ -880,8 +1078,8 @@ function from_candid_PremiumSource_n5(_uploadFile: (file: ExternalBlob) => Promi
 function from_candid_SportsCategory_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SportsCategory): SportsCategory {
     return from_candid_variant_n29(_uploadFile, _downloadFile, value);
 }
-function from_candid_StripeSessionStatus_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
-    return from_candid_variant_n36(_uploadFile, _downloadFile, value);
+function from_candid_StripeSessionStatus_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _StripeSessionStatus): StripeSessionStatus {
+    return from_candid_variant_n37(_uploadFile, _downloadFile, value);
 }
 function from_candid_SubscriptionPlan_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SubscriptionPlan): SubscriptionPlan {
     return from_candid_variant_n15(_uploadFile, _downloadFile, value);
@@ -904,7 +1102,10 @@ function from_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Prediction]): Prediction | null {
+function from_candid_opt_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_LiveScore]): LiveScore | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Prediction]): Prediction | null {
     return value.length === 0 ? null : from_candid_Prediction_n26(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
@@ -955,7 +1156,7 @@ function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uin
         matchDate: value.matchDate
     };
 }
-function from_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     userPrincipal: [] | [string];
     response: string;
 }): {
@@ -1142,7 +1343,7 @@ function from_candid_variant_n33(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_variant_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     completed: {
         userPrincipal: [] | [string];
         response: string;
@@ -1165,7 +1366,7 @@ function from_candid_variant_n36(_uploadFile: (file: ExternalBlob) => Promise<Ui
 } {
     return "completed" in value ? {
         __kind__: "completed",
-        completed: from_candid_record_n37(_uploadFile, _downloadFile, value.completed)
+        completed: from_candid_record_n38(_uploadFile, _downloadFile, value.completed)
     } : "failed" in value ? {
         __kind__: "failed",
         failed: value.failed
@@ -1201,16 +1402,16 @@ function to_candid_SportsCategory_n21(_uploadFile: (file: ExternalBlob) => Promi
 function to_candid_SubscriptionPlan_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubscriptionPlan): _SubscriptionPlan {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function to_candid_SubscriptionStatus_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubscriptionStatus): _SubscriptionStatus {
-    return to_candid_record_n41(_uploadFile, _downloadFile, value);
+function to_candid_SubscriptionStatus_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubscriptionStatus): _SubscriptionStatus {
+    return to_candid_record_n42(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n39(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n40(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n18(_uploadFile, _downloadFile, value);
 }
-function to_candid_opt_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+function to_candid_opt_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
     return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_record_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -1243,7 +1444,7 @@ function to_candid_record_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         matchDate: value.matchDate
     };
 }
-function to_candid_record_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     hasManualPremium: boolean;
     referral?: ReferralStatus;
     subscription?: SubscriptionStatus;
@@ -1259,12 +1460,12 @@ function to_candid_record_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     return {
         hasManualPremium: value.hasManualPremium,
         referral: value.referral ? candid_some(value.referral) : candid_none(),
-        subscription: value.subscription ? candid_some(to_candid_SubscriptionStatus_n40(_uploadFile, _downloadFile, value.subscription)) : candid_none(),
+        subscription: value.subscription ? candid_some(to_candid_SubscriptionStatus_n41(_uploadFile, _downloadFile, value.subscription)) : candid_none(),
         name: value.name,
         email: value.email ? candid_some(value.email) : candid_none()
     };
 }
-function to_candid_record_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     expiresAt: Time;
     plan: SubscriptionPlan;
     stripeSessionId: string;

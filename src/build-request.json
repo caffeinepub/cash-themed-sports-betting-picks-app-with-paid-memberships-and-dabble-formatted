@@ -1,115 +1,67 @@
 {
   "kind": "build_request",
-  "title": "Ensure creator always has premium access and add admin support tools",
+  "title": "Change predictions auto-refresh cadence to every 30 minutes",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-33",
-      "text": "Ensure the configured creator/admin principal always has premium access in all backend premium checks, regardless of any stored UserProfile data (including missing profile, expired Stripe subscription, expired referral, or hasManualPremium=false).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Make sure  always have premium access and admin support"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When the caller principal text equals the configured creator/admin principal in backend/main.mo, backend methods that gate premium content treat the caller as premium-active.",
-        "backend/main.mo checkPremiumStatus() returns a non-#none PremiumSource for the creator/admin principal even if the creator has no UserProfile record.",
-        "No caller can gain creator/admin premium access by modifying any UserProfile fields; the creator/admin principal check is solely based on the caller principal."
-      ]
-    },
-    {
-      "id": "REQ-34",
-      "text": "Add an admin support backend API that allows an admin to diagnose a specific user’s premium access by principal, returning (at minimum) the target user’s UserProfile (if any) and a computed premium status/source consistent with the same logic used for premium gating.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Make sure  always have premium access and admin support"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The new backend method is admin-only (traps or rejects for non-admin callers).",
-        "Given a target principal, the method returns the stored UserProfile (or null) and a computed premium status/source derived from the same rules as checkPremiumStatus/hasPremiumAccess.",
-        "The method does not mutate state.",
-        "The method supports diagnosing users even if they do not yet have a UserProfile record."
-      ]
-    },
-    {
-      "id": "REQ-35",
-      "text": "Add an “Admin Support” section to the existing Admin page UI that lets an admin enter a user Principal ID, fetch the user’s access diagnostic report, and display clear English status details (premium active/inactive, premium source, relevant expirations, and whether a manual premium grant is set).",
+      "id": "REQ-43",
+      "text": "Update the Predictions list page to refresh predictions data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating and terms gating behavior unchanged.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Make sure  always have premium access and admin support"
+          "Use ai tools to make predictions based on dabble. Update predictions every 30 min"
         ]
       },
       "acceptanceCriteria": [
-        "The Admin page includes a dedicated “Admin Support” area (tab or card) visible only to admins (behind the existing AdminGate).",
-        "An admin can enter a Principal ID and request a lookup; the UI displays a readable status summary using only English text.",
-        "Loading and error states are handled and surfaced to the admin (e.g., invalid principal input, unauthorized, user not found/no profile).",
-        "The UI does not require editing any files under frontend/src/components/ui or other immutable paths."
+        "When viewing /predictions, the predictions queries use a 30-minute refetch interval (1,800,000 ms) rather than 10,000 ms.",
+        "PremiumGate and TermsAcceptanceGate behavior on /predictions is unchanged (users without required access are still blocked appropriately).",
+        "Live score polling remains at its existing cadence and continues to update independently of predictions refresh."
       ]
     },
     {
-      "id": "REQ-36",
-      "text": "Extend the admin manual premium tooling so admins can both grant and revoke manual premium access for a specified Principal ID, and ensure the Admin Support UI reflects changes immediately after either action.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Make sure  always have premium access and admin support"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admins can revoke manual premium access for a Principal ID from the Admin UI (confirming action and showing success/error toasts in English).",
-        "After grant or revoke, relevant React Query caches are invalidated/refetched so the Admin Support status view updates without a full page reload.",
-        "Backend revoke behavior uses the existing admin-only revokeManualPremiumAccess capability (or an equivalent admin-only method) and returns meaningful errors for invalid cases (e.g., no user record) that the frontend can present."
-      ]
-    },
-    {
-      "id": "REQ-37",
-      "text": "Ensure premium gating remains consistent across the app by relying on backend-reported premium status for access decisions, so the creator/admin account never sees the premium upsell in PremiumGate-protected screens.",
+      "id": "REQ-44",
+      "text": "Update the Prediction detail page to refresh the selected prediction data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating, terms gating, and live score updates unchanged.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "Make sure  always have premium access and admin support"
+          "Update predictions every 30 min"
         ]
       },
       "acceptanceCriteria": [
-        "For the creator/admin principal, PremiumGate never renders the SubscribeCta for premium content screens when logged in.",
-        "Account page “Premium Access” status shows Active for the creator/admin principal when logged in.",
-        "No user-facing text changes introduce non-English content."
+        "When viewing /predictions/$id, the prediction query uses a 30-minute refetch interval (1,800,000 ms) rather than 10,000 ms.",
+        "The live score panel continues to update at its existing cadence and is not slowed down by the prediction refresh change.",
+        "All user-facing text remains in English."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single-actor Motoko canister; implement new logic in backend/main.mo.",
-    "Only add backend/migration.mo if a state upgrade is required; otherwise do not create a migration.",
-    "Do not modify any paths listed in frontend.immutablePaths (including frontend/src/components/ui, frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
-    "Keep all user-facing text in English."
+    "Do not modify any files under frontend/src/components/ui or any other frontend immutablePaths listed in SYSTEM_CONTEXT.",
+    "Keep Internet Identity as the authentication mechanism; do not add third-party auth.",
+    "Do not add any Dabble API integration; continue using the existing Dabble-aligned formatting approach."
   ],
   "nonGoals": [
-    "Implementing a real-time chat/support system.",
-    "Adding third-party auth providers or email/password login.",
-    "Integrating external databases or third-party customer support tools.",
-    "Changing subscription plan pricing or adding new subscription tiers."
+    "Changing the prediction-generation/scoring model logic or adding new prediction factors beyond what already exists.",
+    "Implementing real-time prediction regeneration on the backend; this change is limited to the client-side refresh cadence for fetching predictions.",
+    "Changing live-score polling cadence (it should remain as-is)."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

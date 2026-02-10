@@ -14,7 +14,7 @@ import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
 actor {
-  // Module Types and Helpers
+  // --- Types ---
   public type SportsCategory = {
     #nba;
     #soccer;
@@ -24,19 +24,6 @@ actor {
     #nfl;
     #ncaabb;
     #other : Text;
-  };
-
-  func sportsCategoryToText(category : SportsCategory) : Text {
-    switch (category) {
-      case (#nba) { "nba" };
-      case (#soccer) { "soccer" };
-      case (#mlb) { "mlb" };
-      case (#nhl) { "nhl" };
-      case (#ncaaf) { "ncaaf" };
-      case (#nfl) { "nfl" };
-      case (#ncaabb) { "ncaabb" };
-      case (#other(text)) { text };
-    };
   };
 
   public type BettingMarket = {
@@ -49,21 +36,9 @@ actor {
     #otherMarkets : Text;
   };
 
-  func bettingMarketToText(market : BettingMarket) : Text {
-    switch (market) {
-      case (#pointSpreads) { "point_spreads" };
-      case (#moneyLine) { "money_line" };
-      case (#overUnder) { "over_under" };
-      case (#alternativeSpreads) { "alternative_spreads" };
-      case (#alternativeOvers) { "alternative_overs" };
-      case (#sameGameParlays) { "same_game_parlays" };
-      case (#otherMarkets(text)) { text };
-    };
-  };
-
   public type SubscriptionPlan = {
-    #monthly; // $25/month
-    #yearly;  // $250/year
+    #monthly;
+    #yearly;
   };
 
   public type PremiumSource = {
@@ -116,33 +91,41 @@ actor {
     };
   };
 
-  type ReferralCodeStatus = {
+  public type ReferralCodeStatus = {
     code : Text;
     validUntil : Time.Time;
   };
 
+  public type LiveScore = {
+    homeTeam : Text;
+    awayTeam : Text;
+    homeScore : Nat;
+    awayScore : Nat;
+    currentPeriod : Text;
+    status : Text;
+    lastUpdated : Time.Time;
+  };
+
+  public type GameId = Text;
+
   // Persistent State
   let predictionsById = Map.empty<Text, Prediction.Prediction>();
-  let depthChartData = Map.empty<Text, Text>(); // team/sport to depth chart info
-  let coachingStyles = Map.empty<Text, Text>(); // team/sport to coaching style
-  let injuryReports = Map.empty<Text, Text>(); // player/team to injury status
-  let newsFlags = Map.empty<Text, Text>(); // news/drama flags (text)
-  let upcomingMatches = Set.empty<Text>(); // Set of upcoming matches/lines by ID
+  let depthChartData = Map.empty<Text, Text>();
+  let coachingStyles = Map.empty<Text, Text>();
+  let injuryReports = Map.empty<Text, Text>();
+  let newsFlags = Map.empty<Text, Text>();
+  let upcomingMatches = Set.empty<Text>();
   let userProfiles = Map.empty<Principal, UserProfile>();
-
-  // New persistent state for referral codes system
   let referralCodes = Map.empty<Text, ReferralCodeStatus>();
+  let liveScores = Map.empty<GameId, LiveScore>();
 
   var stripeConfig : ?Stripe.StripeConfiguration = null;
-
-  // Persistent creator/admin principal for lifetime access
-  let creatorPrincipal = "fjgwj-bolqk-glt6l-xwnqv-fqp2h-s3apm-4mrnu-ldzti-mctrg-uquqj-sqe"; // Literal creator/admin principal (from old backend)
-
-  // Initialize the user system state
+  let creatorPrincipal = "fjgwj-bolqk-glt6l-xwnqv-fqp2h-s3apm-4mrnu-ldzti-mctrg-uquqj-sqe";
   let accessControlState = AccessControl.initState();
+
   include MixinAuthorization(accessControlState);
 
-  // Helper function to check if user has active subscription
+  // --- Helper Functions ---
   func hasActiveSubscription(caller : Principal) : Bool {
     switch (userProfiles.get(caller)) {
       case (null) { false };
@@ -174,27 +157,20 @@ actor {
     };
   };
 
-  // Checks if user has any robust form of premium access.
-  // CRITICAL: Creator and admin principals ALWAYS have premium access regardless of stored profile data
   func hasPremiumAccess(caller : Principal) : Bool {
-    // Check creator/admin first - they bypass all other checks
     if (caller.toText() == creatorPrincipal or AccessControl.isAdmin(accessControlState, caller)) {
       return true;
     };
-    // Then check subscription/referral/manual premium
     hasActiveSubscription(caller) or hasActiveReferral(caller) or hasManualPremium(caller);
   };
 
-  // Ensures read access to paid prediction content
   func ensurePremiumAccess(caller : Principal) {
     if (not hasPremiumAccess(caller)) {
       Runtime.trap("Unauthorized: Active subscription or referral required to view predictions");
     };
   };
 
-  // Ensures user access (but allows admin/creator bypass)
   func ensureUserOrPrivilegedAccess(caller : Principal) {
-    // Allow admins and creator to bypass user role requirement
     if (AccessControl.isAdmin(accessControlState, caller) or caller.toText() == creatorPrincipal) {
       return;
     };
@@ -203,14 +179,13 @@ actor {
     };
   };
 
-  // Ensures only users can manage subscriptions and referral beans
   func ensureUserAccess(caller : Principal) {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can manage subscriptions and referrals");
     };
   };
 
-  // Core Functions
+  // --- Core Functions ---
 
   public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
     OutCall.transform(input);
@@ -298,7 +273,6 @@ actor {
       Runtime.trap("Unauthorized: Only admins can perform premium diagnosis");
     };
 
-    // Use same logic as hasPremiumAccess and checkPremiumStatus for consistency
     let premiumSource = if (target.toText() == creatorPrincipal) {
       #creator;
     } else if (AccessControl.isAdmin(accessControlState, target)) {
@@ -322,7 +296,6 @@ actor {
   // User Profile Management
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    // Enforce proper user access with admin/creator bypass
     ensureUserOrPrivilegedAccess(caller);
     userProfiles.get(caller);
   };
@@ -359,7 +332,7 @@ actor {
         let updatedProfile : UserProfile = {
           name;
           email;
-          subscription = existingProfile.subscription; // Preserve existing subscription
+          subscription = existingProfile.subscription;
           referral = existingProfile.referral;
           hasManualPremium = existingProfile.hasManualPremium;
         };
@@ -373,32 +346,23 @@ actor {
   public shared ({ caller }) func activateSubscription(sessionId : Text, plan : SubscriptionPlan) : async () {
     ensureUserAccess(caller);
 
-    // CRITICAL: Verify the Stripe payment before granting access
     let sessionStatus = await Stripe.getSessionStatus(getStripeConfig(), sessionId, transform);
 
-    // Check if payment was successful
     switch (sessionStatus) {
-      case (#completed { response; userPrincipal }) {
-        // Payment is completed, proceed with activation
-      };
+      case (#completed { response; userPrincipal }) {};
       case (#failed { error }) {
         Runtime.trap("Payment not completed. Cannot activate subscription. " # error);
       };
     };
 
-    // Verify the session belongs to this caller
-    // Note: Stripe.createCheckoutSession associates the session with the caller Principal
-    // We should verify this association, but the Stripe module doesn't expose customer_id
-    // For now, we trust that only the user who created the session knows the sessionId
-
     let expiresAt = switch (plan) {
-      case (#monthly) { Time.now() + 30 * 24 * 60 * 60 * 1_000_000_000 }; // 30 days in nanoseconds
-      case (#yearly) { Time.now() + 365 * 24 * 60 * 60 * 1_000_000_000 }; // 365 days in nanoseconds
+      case (#monthly) { Time.now() + 30 * 24 * 60 * 60 * 1_000_000_000 };
+      case (#yearly) { Time.now() + 365 * 24 * 60 * 60 * 1_000_000_000 };
     };
 
     let subscription : SubscriptionStatus = {
-      plan = plan;
-      expiresAt = expiresAt;
+      plan;
+      expiresAt;
       stripeSessionId = sessionId;
     };
 
@@ -427,7 +391,6 @@ actor {
   };
 
   public query ({ caller }) func checkSubscriptionStatus() : async ?SubscriptionStatus {
-    // Enforce proper user access with admin/creator bypass
     ensureUserOrPrivilegedAccess(caller);
     switch (userProfiles.get(caller)) {
       case (null) { null };
@@ -436,10 +399,8 @@ actor {
   };
 
   public query ({ caller }) func checkPremiumStatus() : async PremiumSource {
-    // Enforce proper user access with admin/creator bypass
     ensureUserOrPrivilegedAccess(caller);
 
-    // Use same logic as hasPremiumAccess for consistency
     if (caller.toText() == creatorPrincipal) { return #creator };
     if (AccessControl.isAdmin(accessControlState, caller)) { return #admin };
     if (hasManualPremium(caller)) { return #manual };
@@ -448,7 +409,7 @@ actor {
     #none;
   };
 
-  // Referral System Functionality
+  // Referral System
 
   public shared ({ caller }) func createReferralCode(code : Text, validForNs : Time.Time) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
@@ -492,7 +453,6 @@ actor {
           Runtime.trap("Referral code has expired");
         };
 
-        // Update user profile with referral
         switch (userProfiles.get(caller)) {
           case (null) {
             let newProfile : UserProfile = {
@@ -522,13 +482,12 @@ actor {
           };
         };
 
-        // Remove code so it can't be reused
         referralCodes.remove(code);
       };
     };
   };
 
-  // Admin-only Data Management Functions
+  // Admin Data Management
 
   public shared ({ caller }) func setDepthChart(teamSportKey : Text, data : Text) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
@@ -572,7 +531,7 @@ actor {
     upcomingMatches.remove(matchId);
   };
 
-  // Admin-only Prediction Management
+  // Prediction Management
 
   public shared ({ caller }) func createPrediction(prediction : Prediction.Prediction) : async () {
     if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
@@ -595,7 +554,7 @@ actor {
     predictionsById.remove(predictionId);
   };
 
-  // Subscriber-only Prediction Retrieval Functions
+  // Prediction Retrieval
 
   public query ({ caller }) func getAllPredictions() : async [Prediction.Prediction] {
     ensurePremiumAccess(caller);
@@ -656,7 +615,7 @@ actor {
     predictionsById.get(predictionId);
   };
 
-  // Admin-only Data Retrieval (for management purposes)
+  // Admin Data Retrieval
 
   public query ({ caller }) func getDepthChart(teamSportKey : Text) : async ?Text {
     if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
@@ -691,5 +650,97 @@ actor {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
     upcomingMatches.values().toArray();
+  };
+
+  // ------------ Live Scores Functionality ------------
+
+  public shared ({ caller }) func updateLiveScore(gameId : GameId, score : LiveScore) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can update live scores");
+    };
+    liveScores.add(gameId, score);
+  };
+
+  public query ({ caller }) func getLiveScore(gameId : GameId) : async ?LiveScore {
+    liveScores.get(gameId);
+  };
+
+  public query ({ caller }) func getAllLiveScores() : async [LiveScore] {
+    liveScores.values().toArray();
+  };
+
+  public query ({ caller }) func getLiveScoresBySport(_sport : SportsCategory) : async [LiveScore] {
+    liveScores.values().toArray();
+  };
+
+  public query ({ caller }) func getLiveScoresByLeague(_league : Text) : async [LiveScore] {
+    liveScores.values().toArray();
+  };
+
+  public query ({ caller }) func getGamesInProgress() : async [LiveScore] {
+    let allScores = liveScores.values().toArray();
+    allScores.filter(func(score) { score.status == "in_progress" });
+  };
+
+  public query ({ caller }) func getFinalScores() : async [LiveScore] {
+    let allScores = liveScores.values().toArray();
+    allScores.filter(func(score) { score.status == "final" });
+  };
+
+  public query ({ caller }) func getLiveScoresByTeam(teamName : Text) : async [LiveScore] {
+    let allScores = liveScores.values().toArray();
+    allScores.filter(
+      func(score) {
+        score.homeTeam.toLower().contains(#text (teamName.toLower())) or
+        score.awayTeam.toLower().contains(#text (teamName.toLower()))
+      }
+    );
+  };
+
+  public query ({ caller }) func getLiveMatchesSummary() : async {
+    inProgress : Nat;
+    finals : Nat;
+    total : Nat;
+  } {
+    let allScores = liveScores.values().toArray();
+    let inProgress = allScores.filter(func(score) { score.status == "in_progress" }).size();
+    let finals = allScores.filter(func(score) { score.status == "final" }).size();
+    {
+      inProgress;
+      finals;
+      total = allScores.size();
+    };
+  };
+
+  public shared ({ caller }) func batchUpdateLiveScores(scores : [(GameId, LiveScore)]) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can perform batch updates");
+    };
+
+    for ((gameId, score) in scores.values()) {
+      liveScores.add(gameId, score);
+    };
+  };
+
+  public shared ({ caller }) func removeLiveScore(gameId : GameId) : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can remove live scores");
+    };
+    liveScores.remove(gameId);
+  };
+
+  public shared ({ caller }) func removeFinishedGames() : async () {
+    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
+      Runtime.trap("Unauthorized: Only admins can clean up scores");
+    };
+
+    let filteredScores = liveScores.filter(
+      func(gameId, score) { score.status != "final" }
+    );
+
+    liveScores.clear();
+    for ((gameId, score) in filteredScores.entries()) {
+      liveScores.add(gameId, score);
+    };
   };
 };

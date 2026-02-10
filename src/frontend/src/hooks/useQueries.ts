@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import type { Prediction, SportsCategory } from '../backend';
 
-export function useGetAllPredictions() {
+export function useGetAllPredictions(options?: Partial<UseQueryOptions<Prediction[]>>) {
   const { actor, isFetching } = useActor();
 
   return useQuery<Prediction[]>({
@@ -12,6 +12,7 @@ export function useGetAllPredictions() {
       return actor.getAllPredictions();
     },
     enabled: !!actor && !isFetching,
+    ...options,
   });
 }
 
@@ -36,7 +37,7 @@ function createSportVariant(sport: string): SportsCategory {
   }
 }
 
-export function useGetPredictionsBySport(sport: string) {
+export function useGetPredictionsBySport(sport: string, options?: Partial<UseQueryOptions<Prediction[]>>) {
   const { actor, isFetching } = useActor();
 
   return useQuery<Prediction[]>({
@@ -47,10 +48,11 @@ export function useGetPredictionsBySport(sport: string) {
       return actor.getPredictionsBySport(sportVariant);
     },
     enabled: !!actor && !isFetching && sport !== 'all',
+    ...options,
   });
 }
 
-export function useGetPrediction(id: string) {
+export function useGetPrediction(id: string, options?: Partial<UseQueryOptions<Prediction | null>>) {
   const { actor, isFetching } = useActor();
 
   return useQuery<Prediction | null>({
@@ -60,5 +62,6 @@ export function useGetPrediction(id: string) {
       return actor.getPrediction(id);
     },
     enabled: !!actor && !isFetching && !!id,
+    ...options,
   });
 }

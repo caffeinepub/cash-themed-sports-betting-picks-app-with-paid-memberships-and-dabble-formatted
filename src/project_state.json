@@ -1,16 +1,18 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 21,
-  "summary": "Build a colorful, cash-themed sports betting predictions app with paid monthly/yearly memberships, AI-driven picks tailored to the Dabble platform, a tiered risk/reward presentation system, and prominent disclaimers/terms (including no-guarantee and limited liability), with optional Cash App–friendly UI elements like displaying a $Cashtag for manual tips (no direct Cash App integration).",
+  "projectStateVersion": 25,
+  "summary": "Build a colorful, cash-themed sports betting predictions app with paid monthly/yearly memberships, AI-driven picks tailored to the Dabble platform, a tiered risk/reward presentation system, prominent disclaimers/terms (including no-guarantee and limited liability), optional Cash App–friendly UI elements like displaying a $Cashtag for manual tips (no direct Cash App integration), and always-live picks with real-time live scores (targeting sub-second updates).",
   "architectural_notes": [
     "Do not implement direct Cash App transfers or routing funds to a personal $Cashtag; only manual display of $Cashtag for optional tips/donations is allowed.",
     "Payments/subscriptions are handled via Stripe; no third-party Cash App payment integration.",
-    "Authentication remains via Internet Identity; email is collected/stored only as an optional user-profile attribute (not used as the login credential)."
+    "Authentication remains via Internet Identity; email is collected/stored only as an optional user-profile attribute (not used as the login credential).",
+    "Real-time live scores/picks require an external live sports data provider and a scalable update mechanism (e.g., polling, streaming/websockets, or push) to support ~1s refresh targets; define acceptable rate limits and graceful degradation when data is delayed/unavailable.",
+    "Prediction refresh cadence should be configurable; support a 30-minute update interval for AI picks (reduce frequency vs. 1s “always live” behavior) while keeping live scores (if enabled) independent."
   ],
   "known_issues": [
     "User requests their account to always have premium access (membership always active / always grant access), suggesting current premium status may not persist reliably."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-implement-paid-membership-plans-25-month-and-250-year-with-subscription-based-access-control-to-premium-prediction-content",
@@ -259,6 +261,54 @@
         "REQ-37"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-for-live-scores-that-poll-on-a-1-second-interval-and-cleanly-start-stop-polling-based-on-route-visibility-and-authentication-state",
+      "title": "Add React Query hooks for live scores that poll on a 1-second interval and cleanly start/stop polling based on route visibility and authentication state.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-predictions-list-page-to-display-live-score-information-alongside-ai-picks-and-visibly-indicate-when-a-pick-is-currently-live-in-progress-with-the-score-ui-updating-every-second",
+      "title": "Update the Predictions list page to display live score information alongside AI picks and visibly indicate when a pick is currently live/in-progress, with the score UI updating every second.",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-prediction-detail-page-to-display-the-corresponding-live-score-panel-when-available-and-keep-it-updated-every-second-while-the-page-is-open",
+      "title": "Update the Prediction detail page to display the corresponding live score panel (when available) and keep it updated every second while the page is open.",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-ai-picks-are-always-live-behavior-by-automatically-refreshing-prediction-data-on-a-short-interval-while-predictions-pages-are-open-without-breaking-existing-premium-gating-or-terms-gating",
+      "title": "Ensure 'AI picks are always live' behavior by automatically refreshing prediction data on a short interval while Predictions pages are open, without breaking existing premium gating or terms gating.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-predictions-list-page-to-refresh-predictions-data-every-30-minutes-instead-of-the-current-10-second-interval-while-keeping-existing-premium-gating-and-terms-gating-behavior-unchanged",
+      "title": "Update the Predictions list page to refresh predictions data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating and terms gating behavior unchanged.",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-prediction-detail-page-to-refresh-the-selected-prediction-data-every-30-minutes-instead-of-the-current-10-second-interval-while-keeping-existing-premium-gating-terms-gating-and-live-score-updates-unchanged",
+      "title": "Update the Prediction detail page to refresh the selected prediction data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating, terms gating, and live score updates unchanged.",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -392,6 +442,26 @@
       "reqIds": [
         "REQ-34"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Add real-time/live sports scores with very frequent updates (target every second) and ensure AI picks are always live/continuously refreshed as games progress.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Implement backend support for live sports scores so the frontend can fetch up-to-date live scores for supported sports and games, suitable for polling every second.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Update/refresh AI-generated Dabble-aligned predictions on a 30-minute cadence (instead of near-real-time), with the refresh schedule applied consistently wherever picks are displayed.",
+      "reqIds": [],
       "status": "pending"
     }
   ],

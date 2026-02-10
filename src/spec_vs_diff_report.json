@@ -1,70 +1,24 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T00:40:35.819Z",
-  "summary": "Diff adds new frontend admin support UI/hooks and updates premium gating to rely on backend-reported premium status. However, the diff summary does not provide direct evidence that the backend implements the required creator/admin premium override in premium checks or the new admin-only diagnosis API method; it only shows new types. The diff also includes several unrelated frontend features/routes (support/terms, risk tier, terms acceptance) that were not requested.",
-  "missing_requirements": [
-    {
-      "id": "REQ-33",
-      "requirement": "Ensure the configured creator/admin principal always has premium access in all backend premium checks; checkPremiumStatus() must return a non-#none PremiumSource for that principal even without a UserProfile.",
-      "reason": "backend/main.mo shows new PremiumSource variants (#admin, #creator) and a creatorPrincipal constant, but the diff summary is truncated and does not show any updated premium-check logic (e.g., checkPremiumStatus/hasPremiumAccess) that enforces the creator/admin principal override solely based on caller principal.",
-      "evidence": [
-        "backend/main.mo (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-34",
-      "requirement": "Add an admin-only backend API to diagnose a user’s premium access by principal, returning the target UserProfile (or null) and computed premium status/source consistent with gating logic, without mutating state.",
-      "reason": "Frontend calls actor.adminPremiumDiagnosis(principal) and backend/main.mo defines an AdminPremiumDiagnosis type, but the diff summary does not show the actual backend method implementation (including admin-only enforcement and use of the same premium logic).",
-      "evidence": [
-        "frontend/src/hooks/useAdminPremiumDiagnosis.ts",
-        "backend/main.mo (truncated)"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-10T01:22:54.732Z",
+  "summary": "REQ-43 and REQ-44 appear implemented by switching the predictions refetch interval to a shared 30-minute constant and applying it on both the predictions list and prediction detail queries. Premium/terms gating wrappers are still present in the modified pages. The diff also introduces a live-scores refetch constant (1s) which was not requested and could imply a live-score cadence change (though the actual polling change is not directly shown).",
+  "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Added new /support and /terms routes and related UI/footer links.",
-      "reason": "BuildRequest does not request new routes/pages for support or terms; it focuses on admin support tooling and premium access behavior.",
+      "description": "Added a shared LIVE_SCORES_REFETCH_INTERVAL_MS constant (1 second) even though the request explicitly did not ask to change or rework live-score polling cadence.",
+      "reason": "BuildRequest is limited to changing predictions refresh cadence only; adding a live-score interval constant is extra surface area and may indicate an unrequested live-score polling adjustment.",
       "evidence": [
-        "frontend-file-summaries.txt (mentions new /support and /terms routes, footer links)"
-      ]
-    },
-    {
-      "description": "Introduced TermsAcceptanceGate wrapping premium-gated prediction pages.",
-      "reason": "Not requested by any of REQ-33 to REQ-37; changes premium-gated pages beyond the specified admin/creator premium consistency requirement.",
-      "evidence": [
-        "frontend-file-summaries.txt (mentions TermsAcceptanceGate on PredictionsPage and PredictionDetailPage)"
-      ]
-    },
-    {
-      "description": "Implemented/extended 'risk tier' presentation in predictions UI and Dabble export formatting.",
-      "reason": "Not requested; unrelated to admin support tools or premium gating consistency changes.",
-      "evidence": [
-        "frontend-file-summaries.txt (mentions Risk Tier in DabbleFormatCard and prediction pages)"
-      ]
-    },
-    {
-      "description": "Multiple unrelated UI/branding and disclaimer copy expansions.",
-      "reason": "Not requested by the BuildRequest; scope is premium/admin support tooling and consistency.",
-      "evidence": [
-        "frontend-file-summaries.txt (mentions AppLayout background changes, HeroBranding updates, ResponsibleGamblingDisclaimer expansion)"
+        "frontend/src/utils/refetchIntervals.ts"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.72,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AdminSupportCard.tsx",
-    "frontend/src/components/ManualPremiumGrantCard.tsx",
-    "frontend/src/components/PremiumGate.tsx",
-    "frontend/src/hooks/useAdminPremiumDiagnosis.ts",
-    "frontend/src/hooks/useManualPremiumGrant.ts",
-    "frontend/src/hooks/useManualPremiumRevoke.ts",
-    "frontend/src/hooks/useSubscription.ts",
-    "frontend/src/pages/AccountPage.tsx",
-    "frontend/src/pages/AdminPage.tsx",
+    "frontend/src/pages/PredictionDetailPage.tsx",
+    "frontend/src/pages/PredictionsPage.tsx",
+    "frontend/src/utils/refetchIntervals.ts",
     "project_state.json"
   ]
 }

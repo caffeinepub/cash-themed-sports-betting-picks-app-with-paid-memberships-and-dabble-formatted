@@ -6,10 +6,13 @@ import PremiumGate from '../components/PremiumGate';
 import TermsAcceptanceGate from '../components/TermsAcceptanceGate';
 import DabbleFormatCard from '../components/DabbleFormatCard';
 import ResponsibleGamblingDisclaimer from '../components/ResponsibleGamblingDisclaimer';
+import LiveScorePanel from '../components/LiveScorePanel';
 import { useGetPrediction } from '../hooks/useQueries';
+import { useGetAllLiveScores } from '../hooks/useLiveScores';
 import { ArrowLeft, Calendar, Target, TrendingUp, Percent, Shield } from 'lucide-react';
 import { getRiskTier } from '../utils/riskTier';
-import type { Prediction } from '../backend';
+import { PREDICTIONS_REFETCH_INTERVAL_MS } from '../utils/refetchIntervals';
+import type { Prediction, LiveScore } from '../backend';
 
 function sportsCategoryToText(category: Prediction['sport']): string {
   if ('nba' in category) return 'NBA';
@@ -34,10 +37,32 @@ function bettingMarketToText(market: Prediction['market']): string {
   return 'Unknown';
 }
 
+function findLiveScoreForPrediction(prediction: Prediction, liveScores: LiveScore[]): LiveScore | null {
+  const sportText = sportsCategoryToText(prediction.sport).toLowerCase();
+  
+  for (const score of liveScores) {
+    const homeTeamLower = score.homeTeam.toLowerCase();
+    const awayTeamLower = score.awayTeam.toLowerCase();
+    const marketValue = prediction.marketValue.toLowerCase();
+    
+    if (marketValue.includes(homeTeamLower) || marketValue.includes(awayTeamLower) ||
+        homeTeamLower.includes(marketValue.split(' ')[0]) || awayTeamLower.includes(marketValue.split(' ')[0])) {
+      return score;
+    }
+  }
+  
+  return null;
+}
+
 function PredictionDetailContent() {
   const { id } = useParams({ from: '/predictions/$id' });
   const navigate = useNavigate();
-  const { data: prediction, isLoading, error } = useGetPrediction(id);
+  const { data: prediction, isLoading, error } = useGetPrediction(id, {
+    refetchInterval: PREDICTIONS_REFETCH_INTERVAL_MS,
+    refetchIntervalInBackground: false,
+  });
+
+  const { data: liveScores = [], isLoading: liveScoresLoading } = useGetAllLiveScores(true);
 
   if (isLoading) {
     return (
@@ -65,6 +90,7 @@ function PredictionDetailContent() {
   const matchDate = new Date(Number(prediction.matchDate) / 1000000);
   const createdDate = new Date(Number(prediction.createdAt) / 1000000);
   const riskTier = getRiskTier(prediction);
+  const liveScore = findLiveScoreForPrediction(prediction, liveScores);
 
   return (
     <div className="container py-12">
@@ -89,6 +115,8 @@ function PredictionDetailContent() {
         </div>
 
         <ResponsibleGamblingDisclaimer />
+
+        <LiveScorePanel liveScore={liveScore} isLoading={liveScoresLoading} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border-cash-gold/20">

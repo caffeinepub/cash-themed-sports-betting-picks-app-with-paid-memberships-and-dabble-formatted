@@ -46,6 +46,16 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const GameId = IDL.Text;
+export const LiveScore = IDL.Record({
+  'status' : IDL.Text,
+  'currentPeriod' : IDL.Text,
+  'homeTeam' : IDL.Text,
+  'lastUpdated' : Time,
+  'homeScore' : IDL.Nat,
+  'awayTeam' : IDL.Text,
+  'awayScore' : IDL.Nat,
+});
 export const ShoppingItem = IDL.Record({
   'productName' : IDL.Text,
   'currency' : IDL.Text,
@@ -126,6 +136,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'batchUpdateLiveScores' : IDL.Func(
+      [IDL.Vec(IDL.Tuple(GameId, LiveScore))],
+      [],
+      [],
+    ),
   'checkPremiumStatus' : IDL.Func([], [PremiumSource], ['query']),
   'checkSubscriptionStatus' : IDL.Func(
       [],
@@ -145,12 +160,38 @@ export const idlService = IDL.Service({
       [IDL.Vec(ReferralCodeStatus)],
       ['query'],
     ),
+  'getAllLiveScores' : IDL.Func([], [IDL.Vec(LiveScore)], ['query']),
   'getAllPredictions' : IDL.Func([], [IDL.Vec(Prediction)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCoachingStyle' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
   'getDepthChart' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
+  'getFinalScores' : IDL.Func([], [IDL.Vec(LiveScore)], ['query']),
+  'getGamesInProgress' : IDL.Func([], [IDL.Vec(LiveScore)], ['query']),
   'getInjuryReport' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
+  'getLiveMatchesSummary' : IDL.Func(
+      [],
+      [
+        IDL.Record({
+          'total' : IDL.Nat,
+          'finals' : IDL.Nat,
+          'inProgress' : IDL.Nat,
+        }),
+      ],
+      ['query'],
+    ),
+  'getLiveScore' : IDL.Func([GameId], [IDL.Opt(LiveScore)], ['query']),
+  'getLiveScoresByLeague' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(LiveScore)],
+      ['query'],
+    ),
+  'getLiveScoresBySport' : IDL.Func(
+      [SportsCategory],
+      [IDL.Vec(LiveScore)],
+      ['query'],
+    ),
+  'getLiveScoresByTeam' : IDL.Func([IDL.Text], [IDL.Vec(LiveScore)], ['query']),
   'getNewsFlag' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
   'getPrediction' : IDL.Func([IDL.Text], [IDL.Opt(Prediction)], ['query']),
   'getPredictionsByDateRange' : IDL.Func(
@@ -179,6 +220,8 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
   'redeemReferralCode' : IDL.Func([IDL.Text], [], []),
+  'removeFinishedGames' : IDL.Func([], [], []),
+  'removeLiveScore' : IDL.Func([GameId], [], []),
   'removeUpcomingMatch' : IDL.Func([IDL.Text], [], []),
   'revokeManualPremiumAccess' : IDL.Func([IDL.Principal], [], []),
   'revokeReferralCode' : IDL.Func([IDL.Text], [], []),
@@ -193,6 +236,7 @@ export const idlService = IDL.Service({
       [TransformationOutput],
       ['query'],
     ),
+  'updateLiveScore' : IDL.Func([GameId, LiveScore], [], []),
   'updatePrediction' : IDL.Func([Prediction], [], []),
   'updateUserProfileData' : IDL.Func([IDL.Text, IDL.Opt(IDL.Text)], [], []),
 });
@@ -234,6 +278,16 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const GameId = IDL.Text;
+  const LiveScore = IDL.Record({
+    'status' : IDL.Text,
+    'currentPeriod' : IDL.Text,
+    'homeTeam' : IDL.Text,
+    'lastUpdated' : Time,
+    'homeScore' : IDL.Nat,
+    'awayTeam' : IDL.Text,
+    'awayScore' : IDL.Nat,
   });
   const ShoppingItem = IDL.Record({
     'productName' : IDL.Text,
@@ -312,6 +366,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'batchUpdateLiveScores' : IDL.Func(
+        [IDL.Vec(IDL.Tuple(GameId, LiveScore))],
+        [],
+        [],
+      ),
     'checkPremiumStatus' : IDL.Func([], [PremiumSource], ['query']),
     'checkSubscriptionStatus' : IDL.Func(
         [],
@@ -331,12 +390,42 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ReferralCodeStatus)],
         ['query'],
       ),
+    'getAllLiveScores' : IDL.Func([], [IDL.Vec(LiveScore)], ['query']),
     'getAllPredictions' : IDL.Func([], [IDL.Vec(Prediction)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCoachingStyle' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
     'getDepthChart' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
+    'getFinalScores' : IDL.Func([], [IDL.Vec(LiveScore)], ['query']),
+    'getGamesInProgress' : IDL.Func([], [IDL.Vec(LiveScore)], ['query']),
     'getInjuryReport' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
+    'getLiveMatchesSummary' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'total' : IDL.Nat,
+            'finals' : IDL.Nat,
+            'inProgress' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
+    'getLiveScore' : IDL.Func([GameId], [IDL.Opt(LiveScore)], ['query']),
+    'getLiveScoresByLeague' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(LiveScore)],
+        ['query'],
+      ),
+    'getLiveScoresBySport' : IDL.Func(
+        [SportsCategory],
+        [IDL.Vec(LiveScore)],
+        ['query'],
+      ),
+    'getLiveScoresByTeam' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(LiveScore)],
+        ['query'],
+      ),
     'getNewsFlag' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
     'getPrediction' : IDL.Func([IDL.Text], [IDL.Opt(Prediction)], ['query']),
     'getPredictionsByDateRange' : IDL.Func(
@@ -365,6 +454,8 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
     'redeemReferralCode' : IDL.Func([IDL.Text], [], []),
+    'removeFinishedGames' : IDL.Func([], [], []),
+    'removeLiveScore' : IDL.Func([GameId], [], []),
     'removeUpcomingMatch' : IDL.Func([IDL.Text], [], []),
     'revokeManualPremiumAccess' : IDL.Func([IDL.Principal], [], []),
     'revokeReferralCode' : IDL.Func([IDL.Text], [], []),
@@ -379,6 +470,7 @@ export const idlFactory = ({ IDL }) => {
         [TransformationOutput],
         ['query'],
       ),
+    'updateLiveScore' : IDL.Func([GameId, LiveScore], [], []),
     'updatePrediction' : IDL.Func([Prediction], [], []),
     'updateUserProfileData' : IDL.Func([IDL.Text, IDL.Opt(IDL.Text)], [], []),
   });

@@ -21,6 +21,16 @@ export type BettingMarket = { 'sameGameParlays' : null } |
   { 'moneyLine' : null } |
   { 'otherMarkets' : string } |
   { 'alternativeOvers' : null };
+export type GameId = string;
+export interface LiveScore {
+  'status' : string,
+  'currentPeriod' : string,
+  'homeTeam' : string,
+  'lastUpdated' : Time,
+  'homeScore' : bigint,
+  'awayTeam' : string,
+  'awayScore' : bigint,
+}
 export interface Prediction {
   'id' : string,
   'winningProbability' : number,
@@ -101,6 +111,10 @@ export interface _SERVICE {
   'addUpcomingMatch' : ActorMethod<[string], undefined>,
   'adminPremiumDiagnosis' : ActorMethod<[Principal], AdminPremiumDiagnosis>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'batchUpdateLiveScores' : ActorMethod<
+    [Array<[GameId, LiveScore]>],
+    undefined
+  >,
   'checkPremiumStatus' : ActorMethod<[], PremiumSource>,
   'checkSubscriptionStatus' : ActorMethod<[], [] | [SubscriptionStatus]>,
   'createCheckoutSession' : ActorMethod<
@@ -111,12 +125,23 @@ export interface _SERVICE {
   'createReferralCode' : ActorMethod<[string, Time], undefined>,
   'deletePrediction' : ActorMethod<[string], undefined>,
   'getActiveReferralCodes' : ActorMethod<[], Array<ReferralCodeStatus>>,
+  'getAllLiveScores' : ActorMethod<[], Array<LiveScore>>,
   'getAllPredictions' : ActorMethod<[], Array<Prediction>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCoachingStyle' : ActorMethod<[string], [] | [string]>,
   'getDepthChart' : ActorMethod<[string], [] | [string]>,
+  'getFinalScores' : ActorMethod<[], Array<LiveScore>>,
+  'getGamesInProgress' : ActorMethod<[], Array<LiveScore>>,
   'getInjuryReport' : ActorMethod<[string], [] | [string]>,
+  'getLiveMatchesSummary' : ActorMethod<
+    [],
+    { 'total' : bigint, 'finals' : bigint, 'inProgress' : bigint }
+  >,
+  'getLiveScore' : ActorMethod<[GameId], [] | [LiveScore]>,
+  'getLiveScoresByLeague' : ActorMethod<[string], Array<LiveScore>>,
+  'getLiveScoresBySport' : ActorMethod<[SportsCategory], Array<LiveScore>>,
+  'getLiveScoresByTeam' : ActorMethod<[string], Array<LiveScore>>,
   'getNewsFlag' : ActorMethod<[string], [] | [string]>,
   'getPrediction' : ActorMethod<[string], [] | [Prediction]>,
   'getPredictionsByDateRange' : ActorMethod<[Time, Time], Array<Prediction>>,
@@ -129,6 +154,8 @@ export interface _SERVICE {
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
   'redeemReferralCode' : ActorMethod<[string], undefined>,
+  'removeFinishedGames' : ActorMethod<[], undefined>,
+  'removeLiveScore' : ActorMethod<[GameId], undefined>,
   'removeUpcomingMatch' : ActorMethod<[string], undefined>,
   'revokeManualPremiumAccess' : ActorMethod<[Principal], undefined>,
   'revokeReferralCode' : ActorMethod<[string], undefined>,
@@ -139,6 +166,7 @@ export interface _SERVICE {
   'setNewsFlag' : ActorMethod<[string, string], undefined>,
   'setStripeConfiguration' : ActorMethod<[StripeConfiguration], undefined>,
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
+  'updateLiveScore' : ActorMethod<[GameId, LiveScore], undefined>,
   'updatePrediction' : ActorMethod<[Prediction], undefined>,
   'updateUserProfileData' : ActorMethod<[string, [] | [string]], undefined>,
 }

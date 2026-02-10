@@ -6,10 +6,13 @@ import PremiumGate from '../components/PremiumGate';
 import TermsAcceptanceGate from '../components/TermsAcceptanceGate';
 import PredictionsFilters from '../components/PredictionsFilters';
 import ResponsibleGamblingDisclaimer from '../components/ResponsibleGamblingDisclaimer';
+import LiveScoreInline from '../components/LiveScoreInline';
 import { useGetAllPredictions, useGetPredictionsBySport } from '../hooks/useQueries';
+import { useGetAllLiveScores } from '../hooks/useLiveScores';
 import { TrendingUp, Calendar, Target, Shield } from 'lucide-react';
 import { getRiskTier } from '../utils/riskTier';
-import type { Prediction } from '../backend';
+import { PREDICTIONS_REFETCH_INTERVAL_MS } from '../utils/refetchIntervals';
+import type { Prediction, LiveScore } from '../backend';
 
 function sportsCategoryToText(category: Prediction['sport']): string {
   if ('nba' in category) return 'NBA';
@@ -34,16 +37,41 @@ function bettingMarketToText(market: Prediction['market']): string {
   return 'Unknown';
 }
 
+function findLiveScoreForPrediction(prediction: Prediction, liveScores: LiveScore[]): LiveScore | null {
+  const sportText = sportsCategoryToText(prediction.sport).toLowerCase();
+  
+  for (const score of liveScores) {
+    const homeTeamLower = score.homeTeam.toLowerCase();
+    const awayTeamLower = score.awayTeam.toLowerCase();
+    const marketValue = prediction.marketValue.toLowerCase();
+    
+    if (marketValue.includes(homeTeamLower) || marketValue.includes(awayTeamLower) ||
+        homeTeamLower.includes(marketValue.split(' ')[0]) || awayTeamLower.includes(marketValue.split(' ')[0])) {
+      return score;
+    }
+  }
+  
+  return null;
+}
+
 function PredictionsContent() {
   const [sport, setSport] = useState('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const navigate = useNavigate();
 
-  const allPredictionsQuery = useGetAllPredictions();
-  const sportPredictionsQuery = useGetPredictionsBySport(sport);
+  const allPredictionsQuery = useGetAllPredictions({
+    refetchInterval: PREDICTIONS_REFETCH_INTERVAL_MS,
+    refetchIntervalInBackground: false,
+  });
+  const sportPredictionsQuery = useGetPredictionsBySport(sport, {
+    refetchInterval: PREDICTIONS_REFETCH_INTERVAL_MS,
+    refetchIntervalInBackground: false,
+  });
 
   const query = sport === 'all' ? allPredictionsQuery : sportPredictionsQuery;
   const { data: predictions = [], isLoading, error } = query;
+
+  const { data: liveScores = [], isLoading: liveScoresLoading } = useGetAllLiveScores(true);
 
   const sortedPredictions = [...predictions].sort((a, b) => {
     const dateA = Number(a.matchDate);
@@ -98,6 +126,7 @@ function PredictionsContent() {
               const confidence = (prediction.winningProbability * 100).toFixed(1);
               const matchDate = new Date(Number(prediction.matchDate) / 1000000);
               const riskTier = getRiskTier(prediction);
+              const liveScore = findLiveScoreForPrediction(prediction, liveScores);
 
               return (
                 <Card
@@ -138,6 +167,11 @@ function PredictionsContent() {
                       <Shield className="h-3 w-3" />
                       {riskTier.label}
                     </Badge>
+                    {!liveScoresLoading && (
+                      <div className="pt-2 border-t border-border/40">
+                        <LiveScoreInline liveScore={liveScore} />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
