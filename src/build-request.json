@@ -1,67 +1,40 @@
 {
   "kind": "build_request",
-  "title": "Make the app fit the page and use a more vibrant cash-themed background",
+  "title": "Enable purchase and memberships access paths",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-21",
-      "text": "Update the global app layout background so it better fills the page and reads as a more vibrant cash theme (greens + gold accents), while keeping content readable in both light and dark modes.",
+      "id": "REQ-30",
+      "text": "Update the main navigation so authenticated users can always navigate to the Predictions page, even when they do not yet have an active membership, and rely on the existing PremiumGate upsell to restrict access.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-4"
         ],
         "quotes": [
-          "Make it fit to page more vibrant cash theme background"
+          "Enable purchase and memberships"
         ]
       },
       "acceptanceCriteria": [
-        "Across all routes rendered inside AppLayout, the background visually extends to the full viewport height (no unintended blank bands above/below content).",
-        "The background uses a more vibrant cash-themed treatment (e.g., richer green/gold gradient accents) without reducing text contrast or legibility on cards and primary text.",
-        "The background remains consistent between pages (Landing, Pricing, Predictions, Account, Admin, Terms, Support, Payment Success/Failure).",
-        "Light mode and dark mode both remain usable: body text, headings, and key UI surfaces meet clear contrast against the background."
-      ]
-    },
-    {
-      "id": "REQ-22",
-      "text": "Adjust the cash-themed pattern/gradient usage on the landing hero so it looks more vivid and better integrated with the rest of the page background (using the existing generated pattern asset).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "Make it fit to page more vibrant cash theme background"
-        ]
-      },
-      "acceptanceCriteria": [
-        "HeroBranding continues to use /assets/generated/cash-pattern.dim_2048x2048.png, but with updated opacity/overlay/gradient so the effect is noticeably more vibrant while still subtle enough for readability.",
-        "The hero background transitions smoothly into the rest of the page background (no harsh edge where the hero ends).",
-        "No layout overflow is introduced (no unintended horizontal scroll on mobile or desktop)."
+        "When a user is signed in but does not have active access, the header (desktop and mobile) still shows a \"Predictions\" link.",
+        "Clicking \"Predictions\" as a signed-in but non-premium user routes to the Predictions page and shows the existing subscribe call-to-action (from PremiumGate), rather than hiding the page via navigation.",
+        "When a user has active access (or is admin), Predictions continues to behave as it does today (full access).",
+        "All user-facing text remains in English."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/components/ui (read-only Shadcn components).",
-    "Do not modify immutable hook files listed in SYSTEM_CONTEXT (compose existing hooks/components instead).",
-    "Do not add any backend changes for this request."
+    "Do not edit files under frontend/src/components/ui (read-only).",
+    "Do not edit immutable frontend paths listed in SYSTEM_CONTEXT.",
+    "Backend must remain a single Motoko actor in backend/main.mo; only add migration.mo if an actual state upgrade is required."
   ],
   "nonGoals": [
-    "Do not change pricing, subscription logic, referral code logic, predictions logic, or Terms/Disclaimer content.",
-    "Do not introduce new authentication methods or third-party integrations."
+    "Do not add new membership plans beyond $25/month and $250/year.",
+    "Do not add new authentication methods (Internet Identity remains the only login).",
+    "Do not add any third-party payment providers beyond the existing Stripe flow."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

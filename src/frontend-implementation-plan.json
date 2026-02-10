@@ -1,48 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Full-viewport vibrant cash-themed background + improved landing hero integration",
+  "title": "Enable Predictions navigation for signed-in non-premium users",
   "requirements": [
     {
-      "id": "REQ-21",
-      "summary": "Enhance the global AppLayout background to be full-viewport and more vibrant cash-themed (greens + gold accents) while preserving readability in light and dark modes.",
+      "id": "REQ-30",
+      "summary": "Show the Predictions link in header navigation for any authenticated user (desktop + mobile) and rely on existing PremiumGate upsell for non-premium access.",
       "acceptanceCriteria": [
-        "Across all routes rendered inside AppLayout, the background visually extends to the full viewport height (no unintended blank bands above/below content).",
-        "The background uses a more vibrant cash-themed treatment (e.g., richer green/gold gradient accents) without reducing text contrast or legibility on cards and primary text.",
-        "The background remains consistent between pages (Landing, Pricing, Predictions, Account, Admin, Terms, Support, Payment Success/Failure).",
-        "Light mode and dark mode both remain usable: body text, headings, and key UI surfaces meet clear contrast against the background."
+        "When a user is signed in but does not have active access, the header (desktop and mobile) still shows a \"Predictions\" link.",
+        "Clicking \"Predictions\" as a signed-in but non-premium user routes to the Predictions page and shows the existing subscribe call-to-action (from PremiumGate), rather than hiding the page via navigation.",
+        "When a user has active access (or is admin), Predictions continues to behave as it does today (full access).",
+        "All user-facing text remains in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/components/AppHeader.tsx",
           "operation": "modify",
-          "description": "Add global base layout height guarantees (html/body/#root) and introduce a reusable global cash-themed background treatment (e.g., layered gradient with green/gold accents) that adapts to light/dark variables while keeping card/text surfaces readable."
-        },
-        {
-          "path": "frontend/src/components/AppLayout.tsx",
-          "operation": "modify",
-          "description": "Apply the new global background class/structure at the AppLayout root container (keeping min-h-screen and flex layout) so the background consistently fills the viewport across all routed pages."
-        }
-      ]
-    },
-    {
-      "id": "REQ-22",
-      "summary": "Make the Landing hero cash pattern/gradient more vivid and smoothly blended into the global background using the existing generated pattern asset.",
-      "acceptanceCriteria": [
-        "HeroBranding continues to use /assets/generated/cash-pattern.dim_2048x2048.png, but with updated opacity/overlay/gradient so the effect is noticeably more vibrant while still subtle enough for readability.",
-        "The hero background transitions smoothly into the rest of the page background (no harsh edge where the hero ends).",
-        "No layout overflow is introduced (no unintended horizontal scroll on mobile or desktop)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/HeroBranding.tsx",
-          "operation": "modify",
-          "description": "Adjust HeroBranding's background layers to keep using the existing generated asset at frontend/public/assets/generated/cash-pattern.dim_2048x2048.png (pattern opacity + additional green/gold overlay/gradient) and update the bottom fade so it blends seamlessly into the global AppLayout background without introducing horizontal overflow."
-        },
-        {
-          "path": "frontend/src/pages/LandingPage.tsx",
-          "operation": "modify",
-          "description": "Review and refine any LandingPage section-level background gradients (e.g., pricing section) so they visually integrate with the updated global + hero backgrounds and do not create a visible seam immediately after the hero."
+          "description": "Update desktop and mobile nav rendering so the \"Predictions\" link is displayed whenever the user is authenticated, regardless of membership/subscription state, while keeping the route pointing to /predictions. Optionally adjust iconography based on access state, but do not change user-facing text (English only). Use existing auth state from the authorization-based Internet Identity flow (via useInternetIdentity) and existing subscription/access signals (via useSubscription) as needed. Verify the component's usage instructions before implementing."
         }
       ]
     }

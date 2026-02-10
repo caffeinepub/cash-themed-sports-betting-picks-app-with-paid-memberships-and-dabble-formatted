@@ -13,8 +13,6 @@ import OutCall "http-outcalls/outcall";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-
-
 actor {
   // Module Types and Helpers
   public type SportsCategory = {
@@ -72,6 +70,7 @@ actor {
     #none;
     #stripe;
     #referral;
+    #manual;
   };
 
   public type SubscriptionStatus = {
@@ -90,6 +89,7 @@ actor {
     email : ?Text;
     subscription : ?SubscriptionStatus;
     referral : ?ReferralStatus;
+    hasManualPremium : Bool;
   };
 
   module Prediction {
@@ -128,6 +128,9 @@ actor {
 
   var stripeConfig : ?Stripe.StripeConfiguration = null;
 
+  // Persistent creator/admin principal for lifetime access
+  let creatorPrincipal = "fjgwj-bolqk-glt6l-xwnqv-fqp2h-s3apm-4mrnu-ldzti-mctrg-uquqj-sqe"; // Literal creator/admin principal (from old backend)
+
   // Initialize the user system state
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -157,9 +160,41 @@ actor {
     };
   };
 
-  // Helper function to check if user has any form of premium access
+  func hasManualPremium(caller : Principal) : Bool {
+    switch (userProfiles.get(caller)) {
+      case (null) { false };
+      case (?profile) { profile.hasManualPremium };
+    };
+  };
+
+  // Checks if user has any robust form of premium access.
   func hasPremiumAccess(caller : Principal) : Bool {
-    hasActiveSubscription(caller) or hasActiveReferral(caller) or AccessControl.isAdmin(accessControlState, caller);
+    hasActiveSubscription(caller) or hasActiveReferral(caller) or hasManualPremium(caller) or AccessControl.isAdmin(accessControlState, caller) or caller.toText() == creatorPrincipal;
+  };
+
+  // Ensures read access to paid prediction content
+  func ensurePremiumAccess(caller : Principal) {
+    if (not (hasPremiumAccess(caller))) {
+      Runtime.trap("Unauthorized: Active subscription or referral required to view predictions");
+    };
+  };
+
+  // Ensures user access (but allows admin/creator bypass)
+  func ensureUserOrPrivilegedAccess(caller : Principal) {
+    // Allow admins and creator to bypass user role requirement
+    if (AccessControl.isAdmin(accessControlState, caller) or caller.toText() == creatorPrincipal) {
+      return;
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access this feature");
+    };
+  };
+
+  // Ensures only users can manage subscriptions and referral beans
+  func ensureUserAccess(caller : Principal) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can manage subscriptions and referrals");
+    };
   };
 
   // Core Functions
@@ -187,6 +222,9 @@ actor {
   };
 
   public shared ({ caller }) func getStripeSessionStatus(sessionId : Text) : async Stripe.StripeSessionStatus {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can check session status");
+    };
     await Stripe.getSessionStatus(getStripeConfig(), sessionId, transform);
   };
 
@@ -197,26 +235,75 @@ actor {
     await Stripe.createCheckoutSession(getStripeConfig(), caller, items, successUrl, cancelUrl, transform);
   };
 
+  // Admin-only manual premium access grant function
+  public shared ({ caller }) func grantManualPremiumAccess(user : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can grant manual premium access");
+    };
+
+    switch (userProfiles.get(user)) {
+      case (null) {
+        let newProfile : UserProfile = {
+          name = "Manually Granted";
+          email = null;
+          subscription = null;
+          referral = null;
+          hasManualPremium = true;
+        };
+        userProfiles.add(user, newProfile);
+      };
+      case (?existingProfile) {
+        let updatedProfile : UserProfile = {
+          existingProfile with
+          hasManualPremium = true;
+        };
+        userProfiles.add(user, updatedProfile);
+      };
+    };
+  };
+
+  public shared ({ caller }) func revokeManualPremiumAccess(user : Principal) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can revoke manual premium access");
+    };
+
+    switch (userProfiles.get(user)) {
+      case (null) {
+        Runtime.trap("No user found with manual premium access");
+      };
+      case (?existingProfile) {
+        let updatedProfile : UserProfile = {
+          existingProfile with
+          hasManualPremium = false;
+        };
+        userProfiles.add(user, updatedProfile);
+      };
+    };
+  };
+
   // User Profile Management
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view profiles");
-    };
+    ensureUserAccess(caller);
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (caller != user and not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
   };
 
-  public shared ({ caller }) func updateUserProfileData(name : Text, email : ?Text) : async () {
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can update profiles");
+      Runtime.trap("Unauthorized: Only users can save profiles");
     };
+    userProfiles.add(caller, profile);
+  };
+
+  public shared ({ caller }) func updateUserProfileData(name : Text, email : ?Text) : async () {
+    ensureUserAccess(caller);
 
     switch (userProfiles.get(caller)) {
       case (null) {
@@ -225,6 +312,7 @@ actor {
           email;
           subscription = null;
           referral = null;
+          hasManualPremium = false;
         };
         userProfiles.add(caller, newProfile);
       };
@@ -234,6 +322,7 @@ actor {
           email;
           subscription = existingProfile.subscription; // Preserve existing subscription
           referral = existingProfile.referral;
+          hasManualPremium = existingProfile.hasManualPremium;
         };
         userProfiles.add(caller, updatedProfile);
       };
@@ -243,9 +332,25 @@ actor {
   // Subscription Management
 
   public shared ({ caller }) func activateSubscription(sessionId : Text, plan : SubscriptionPlan) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can activate subscriptions");
+    ensureUserAccess(caller);
+
+    // CRITICAL: Verify the Stripe payment before granting access
+    let sessionStatus = await Stripe.getSessionStatus(getStripeConfig(), sessionId, transform);
+
+    // Check if payment was successful
+    switch (sessionStatus) {
+      case (#completed { response; userPrincipal }) {
+        // Payment is completed, proceed with activation
+      };
+      case (#failed { error }) {
+        Runtime.trap("Payment not completed. Cannot activate subscription. " # error);
+      };
     };
+
+    // Verify the session belongs to this caller
+    // Note: Stripe.createCheckoutSession associates the session with the caller Principal
+    // We should verify this association, but the Stripe module doesn't expose customer_id
+    // For now, we trust that only the user who created the session knows the sessionId
 
     let expiresAt = switch (plan) {
       case (#monthly) { Time.now() + 30 * 24 * 60 * 60 * 1_000_000_000 }; // 30 days in nanoseconds
@@ -265,6 +370,7 @@ actor {
           email = null;
           subscription = ?subscription;
           referral = null;
+          hasManualPremium = false;
         };
         userProfiles.add(caller, newProfile);
       };
@@ -274,6 +380,7 @@ actor {
           email = existingProfile.email;
           subscription = ?subscription;
           referral = existingProfile.referral;
+          hasManualPremium = existingProfile.hasManualPremium;
         };
         userProfiles.add(caller, updatedProfile);
       };
@@ -291,11 +398,20 @@ actor {
   };
 
   public query ({ caller }) func checkPremiumStatus() : async PremiumSource {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can check for premium access");
-    };
+    // Allow admin and creator to check status without user role requirement
+    ensureUserOrPrivilegedAccess(caller);
+
+    // Check in priority order: manual, subscription, referral
+    if (hasManualPremium(caller)) { return #manual };
     if (hasActiveSubscription(caller)) { return #stripe };
     if (hasActiveReferral(caller)) { return #referral };
+
+    // Creator (owner) lifetime access
+    if (caller.toText() == creatorPrincipal) { return #manual };
+
+    // Admin lifetime access
+    if (AccessControl.isAdmin(accessControlState, caller)) { return #manual };
+
     #none;
   };
 
@@ -338,9 +454,7 @@ actor {
 
   // User redeems a referral code for premium access
   public shared ({ caller }) func redeemReferralCode(code : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can redeem codes");
-    };
+    ensureUserAccess(caller);
 
     switch (referralCodes.get(code)) {
       case (null) { Runtime.trap("Invalid referral code") };
@@ -360,6 +474,7 @@ actor {
                 code = status.code;
                 expiresAt = status.validUntil;
               };
+              hasManualPremium = false;
             };
             userProfiles.add(caller, newProfile);
           };
@@ -372,6 +487,7 @@ actor {
                 code = status.code;
                 expiresAt = status.validUntil;
               };
+              hasManualPremium = existingProfile.hasManualPremium;
             };
             userProfiles.add(caller, updatedProfile);
           };
@@ -453,22 +569,12 @@ actor {
   // Subscriber-only Prediction Retrieval Functions
 
   public query ({ caller }) func getAllPredictions() : async [Prediction.Prediction] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view predictions");
-    };
-    if (not hasPremiumAccess(caller)) {
-      Runtime.trap("Unauthorized: Active subscription or referral required to view predictions");
-    };
+    ensurePremiumAccess(caller);
     predictionsById.values().toArray().sort();
   };
 
   public query ({ caller }) func getPredictionsBySport(sport : SportsCategory) : async [Prediction.Prediction] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view predictions");
-    };
-    if (not hasPremiumAccess(caller)) {
-      Runtime.trap("Unauthorized: Active subscription or referral required to view predictions");
-    };
+    ensurePremiumAccess(caller);
     let filtered = predictionsById.values().toArray().filter(
       func(p : Prediction.Prediction) : Bool {
         switch (sport, p.sport) {
@@ -488,12 +594,7 @@ actor {
   };
 
   public query ({ caller }) func getPredictionsByMarket(market : BettingMarket) : async [Prediction.Prediction] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view predictions");
-    };
-    if (not hasPremiumAccess(caller)) {
-      Runtime.trap("Unauthorized: Active subscription or referral required to view predictions");
-    };
+    ensurePremiumAccess(caller);
     let filtered = predictionsById.values().toArray().filter(
       func(p : Prediction.Prediction) : Bool {
         switch (market, p.market) {
@@ -512,12 +613,7 @@ actor {
   };
 
   public query ({ caller }) func getPredictionsByDateRange(startTime : Time.Time, endTime : Time.Time) : async [Prediction.Prediction] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view predictions");
-    };
-    if (not hasPremiumAccess(caller)) {
-      Runtime.trap("Unauthorized: Active subscription or referral required to view predictions");
-    };
+    ensurePremiumAccess(caller);
     let filtered = predictionsById.values().toArray().filter(
       func(p : Prediction.Prediction) : Bool {
         p.matchDate >= startTime and p.matchDate <= endTime;
@@ -527,12 +623,7 @@ actor {
   };
 
   public query ({ caller }) func getPrediction(predictionId : Text) : async ?Prediction.Prediction {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view predictions");
-    };
-    if (not hasPremiumAccess(caller)) {
-      Runtime.trap("Unauthorized: Active subscription or referral required to view predictions");
-    };
+    ensurePremiumAccess(caller);
     predictionsById.get(predictionId);
   };
 

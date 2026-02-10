@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { ShoppingItem, StripeConfiguration } from '../backend';
+import type { ShoppingItem, StripeConfiguration, SubscriptionPlan } from '../backend';
 
 export type CheckoutSession = {
   id: string;
@@ -11,17 +11,42 @@ export function useCreateCheckoutSession() {
   const { actor } = useActor();
 
   return useMutation({
-    mutationFn: async (items: ShoppingItem[]): Promise<CheckoutSession> => {
+    mutationFn: async ({ items, plan }: { items: ShoppingItem[]; plan: SubscriptionPlan }): Promise<CheckoutSession> => {
       if (!actor) throw new Error('Actor not available');
-      const baseUrl = `${window.location.protocol}//${window.location.host}`;
-      const successUrl = `${baseUrl}/payment-success`;
-      const cancelUrl = `${baseUrl}/payment-failure`;
-      const result = await actor.createCheckoutSession(items, successUrl, cancelUrl);
-      const session = JSON.parse(result) as CheckoutSession;
-      if (!session?.url) {
-        throw new Error('Stripe session missing url');
+      
+      try {
+        const baseUrl = `${window.location.protocol}//${window.location.host}`;
+        const successUrl = `${baseUrl}/payment-success?plan=${plan}&session_id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = `${baseUrl}/payment-failure`;
+        
+        const result = await actor.createCheckoutSession(items, successUrl, cancelUrl);
+        
+        // Defensive JSON parsing
+        let session: CheckoutSession;
+        try {
+          session = JSON.parse(result) as CheckoutSession;
+        } catch (parseError) {
+          console.error('Failed to parse checkout session:', parseError);
+          throw new Error('Invalid response from payment system');
+        }
+        
+        // Validate session has required fields
+        if (!session?.url || typeof session.url !== 'string' || session.url.trim() === '') {
+          throw new Error('Payment system did not return a valid checkout URL');
+        }
+        
+        return session;
+      } catch (error: any) {
+        // Normalize error messages
+        if (error.message?.includes('Stripe needs to be first configured')) {
+          throw new Error('Payment system is not configured. Please contact support.');
+        }
+        if (error.message?.includes('Unauthorized')) {
+          throw new Error('You must be signed in to create a checkout session');
+        }
+        // Re-throw with original message if already normalized
+        throw error;
       }
-      return session;
     },
   });
 }

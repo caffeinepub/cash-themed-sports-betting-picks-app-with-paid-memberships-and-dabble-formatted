@@ -198,6 +198,7 @@ export interface SubscriptionStatus {
     stripeSessionId: string;
 }
 export interface UserProfile {
+    hasManualPremium: boolean;
     referral?: ReferralStatus;
     subscription?: SubscriptionStatus;
     name: string;
@@ -210,7 +211,8 @@ export interface ReferralCodeStatus {
 export enum PremiumSource {
     stripe = "stripe",
     referral = "referral",
-    none = "none"
+    none = "none",
+    manual = "manual"
 }
 export enum SubscriptionPlan {
     monthly = "monthly",
@@ -247,11 +249,14 @@ export interface backendInterface {
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUpcomingMatches(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    grantManualPremiumAccess(user: Principal): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
     redeemReferralCode(code: string): Promise<void>;
     removeUpcomingMatch(matchId: string): Promise<void>;
+    revokeManualPremiumAccess(user: Principal): Promise<void>;
     revokeReferralCode(code: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setCoachingStyle(teamSportKey: string, data: string): Promise<void>;
     setDepthChart(teamSportKey: string, data: string): Promise<void>;
     setInjuryReport(playerTeamKey: string, data: string): Promise<void>;
@@ -614,6 +619,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
         }
     }
+    async grantManualPremiumAccess(arg0: Principal): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.grantManualPremiumAccess(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.grantManualPremiumAccess(arg0);
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -670,6 +689,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async revokeManualPremiumAccess(arg0: Principal): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.revokeManualPremiumAccess(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.revokeManualPremiumAccess(arg0);
+            return result;
+        }
+    }
     async revokeReferralCode(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -681,6 +714,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.revokeReferralCode(arg0);
+            return result;
+        }
+    }
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n36(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -785,14 +832,14 @@ export class Backend implements backendInterface {
     async updateUserProfileData(arg0: string, arg1: string | null): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n36(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n40(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n36(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.updateUserProfileData(arg0, to_candid_opt_n40(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
@@ -870,17 +917,20 @@ function from_candid_record_n20(_uploadFile: (file: ExternalBlob) => Promise<Uin
     };
 }
 function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    hasManualPremium: boolean;
     referral: [] | [_ReferralStatus];
     subscription: [] | [_SubscriptionStatus];
     name: string;
     email: [] | [string];
 }): {
+    hasManualPremium: boolean;
     referral?: ReferralStatus;
     subscription?: SubscriptionStatus;
     name: string;
     email?: string;
 } {
     return {
+        hasManualPremium: value.hasManualPremium,
         referral: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.referral)),
         subscription: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.subscription)),
         name: value.name,
@@ -1091,8 +1141,10 @@ function from_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uin
     referral: null;
 } | {
     none: null;
+} | {
+    manual: null;
 }): PremiumSource {
-    return "stripe" in value ? PremiumSource.stripe : "referral" in value ? PremiumSource.referral : "none" in value ? PremiumSource.none : value;
+    return "stripe" in value ? PremiumSource.stripe : "referral" in value ? PremiumSource.referral : "none" in value ? PremiumSource.none : "manual" in value ? PremiumSource.manual : value;
 }
 function from_candid_vec_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Prediction>): Array<Prediction> {
     return value.map((x)=>from_candid_Prediction_n19(_uploadFile, _downloadFile, x));
@@ -1109,10 +1161,16 @@ function to_candid_SportsCategory_n14(_uploadFile: (file: ExternalBlob) => Promi
 function to_candid_SubscriptionPlan_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubscriptionPlan): _SubscriptionPlan {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
+function to_candid_SubscriptionStatus_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubscriptionStatus): _SubscriptionStatus {
+    return to_candid_record_n39(_uploadFile, _downloadFile, value);
+}
+function to_candid_UserProfile_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n37(_uploadFile, _downloadFile, value);
+}
 function to_candid_UserRole_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_opt_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+function to_candid_opt_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
     return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -1143,6 +1201,42 @@ function to_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         sport: to_candid_SportsCategory_n14(_uploadFile, _downloadFile, value.sport),
         market: to_candid_BettingMarket_n16(_uploadFile, _downloadFile, value.market),
         matchDate: value.matchDate
+    };
+}
+function to_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    hasManualPremium: boolean;
+    referral?: ReferralStatus;
+    subscription?: SubscriptionStatus;
+    name: string;
+    email?: string;
+}): {
+    hasManualPremium: boolean;
+    referral: [] | [_ReferralStatus];
+    subscription: [] | [_SubscriptionStatus];
+    name: string;
+    email: [] | [string];
+} {
+    return {
+        hasManualPremium: value.hasManualPremium,
+        referral: value.referral ? candid_some(value.referral) : candid_none(),
+        subscription: value.subscription ? candid_some(to_candid_SubscriptionStatus_n38(_uploadFile, _downloadFile, value.subscription)) : candid_none(),
+        name: value.name,
+        email: value.email ? candid_some(value.email) : candid_none()
+    };
+}
+function to_candid_record_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    expiresAt: Time;
+    plan: SubscriptionPlan;
+    stripeSessionId: string;
+}): {
+    expiresAt: _Time;
+    plan: _SubscriptionPlan;
+    stripeSessionId: string;
+} {
+    return {
+        expiresAt: value.expiresAt,
+        plan: to_candid_SubscriptionPlan_n1(_uploadFile, _downloadFile, value.plan),
+        stripeSessionId: value.stripeSessionId
     };
 }
 function to_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {

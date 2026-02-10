@@ -21,6 +21,7 @@ export const PremiumSource = IDL.Variant({
   'stripe' : IDL.Null,
   'referral' : IDL.Null,
   'none' : IDL.Null,
+  'manual' : IDL.Null,
 });
 export const Time = IDL.Int;
 export const SubscriptionStatus = IDL.Record({
@@ -73,6 +74,7 @@ export const ReferralStatus = IDL.Record({
   'code' : IDL.Text,
 });
 export const UserProfile = IDL.Record({
+  'hasManualPremium' : IDL.Bool,
   'referral' : IDL.Opt(ReferralStatus),
   'subscription' : IDL.Opt(SubscriptionStatus),
   'name' : IDL.Text,
@@ -162,11 +164,14 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'grantManualPremiumAccess' : IDL.Func([IDL.Principal], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
   'redeemReferralCode' : IDL.Func([IDL.Text], [], []),
   'removeUpcomingMatch' : IDL.Func([IDL.Text], [], []),
+  'revokeManualPremiumAccess' : IDL.Func([IDL.Principal], [], []),
   'revokeReferralCode' : IDL.Func([IDL.Text], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setCoachingStyle' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'setDepthChart' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'setInjuryReport' : IDL.Func([IDL.Text, IDL.Text], [], []),
@@ -197,6 +202,7 @@ export const idlFactory = ({ IDL }) => {
     'stripe' : IDL.Null,
     'referral' : IDL.Null,
     'none' : IDL.Null,
+    'manual' : IDL.Null,
   });
   const Time = IDL.Int;
   const SubscriptionStatus = IDL.Record({
@@ -246,6 +252,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const ReferralStatus = IDL.Record({ 'expiresAt' : Time, 'code' : IDL.Text });
   const UserProfile = IDL.Record({
+    'hasManualPremium' : IDL.Bool,
     'referral' : IDL.Opt(ReferralStatus),
     'subscription' : IDL.Opt(SubscriptionStatus),
     'name' : IDL.Text,
@@ -332,11 +339,14 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'grantManualPremiumAccess' : IDL.Func([IDL.Principal], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isStripeConfigured' : IDL.Func([], [IDL.Bool], ['query']),
     'redeemReferralCode' : IDL.Func([IDL.Text], [], []),
     'removeUpcomingMatch' : IDL.Func([IDL.Text], [], []),
+    'revokeManualPremiumAccess' : IDL.Func([IDL.Principal], [], []),
     'revokeReferralCode' : IDL.Func([IDL.Text], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setCoachingStyle' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'setDepthChart' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'setInjuryReport' : IDL.Func([IDL.Text, IDL.Text], [], []),

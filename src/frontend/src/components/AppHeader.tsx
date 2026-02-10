@@ -12,7 +12,7 @@ export default function AppHeader() {
   const { identity } = useInternetIdentity();
   const navigate = useNavigate();
   const { data: isAdmin } = useIsAdmin();
-  const { hasActiveSubscription } = useSubscription();
+  const { hasActiveAccess } = useSubscription();
 
   const isAuthenticated = !!identity;
 
@@ -42,7 +42,7 @@ export default function AppHeader() {
             >
               Pricing
             </Link>
-            {isAuthenticated && hasActiveSubscription && (
+            {isAuthenticated && (
               <Link
                 to="/predictions"
                 className="text-sm font-medium transition-colors hover:text-cash-gold flex items-center gap-1"
@@ -110,7 +110,7 @@ export default function AppHeader() {
             >
               Pricing
             </Link>
-            {isAuthenticated && hasActiveSubscription && (
+            {isAuthenticated && (
               <Link
                 to="/predictions"
                 className="text-sm font-medium transition-colors hover:text-cash-gold flex items-center gap-1"

@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useSubscription } from '../hooks/useSubscription';
+import { useIsAdmin } from '../hooks/useAdmin';
 import SubscribeCta from './SubscribeCta';
 import { Lock } from 'lucide-react';
 
@@ -11,9 +12,11 @@ interface PremiumGateProps {
 
 export default function PremiumGate({ children, showPreview = false }: PremiumGateProps) {
   const { identity } = useInternetIdentity();
-  const { hasActiveSubscription, isLoading } = useSubscription();
+  const { hasActiveAccess, isLoading: subscriptionLoading } = useSubscription();
+  const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
 
   const isAuthenticated = !!identity;
+  const isLoading = subscriptionLoading || adminLoading;
 
   if (isLoading) {
     return (
@@ -40,7 +43,12 @@ export default function PremiumGate({ children, showPreview = false }: PremiumGa
     );
   }
 
-  if (!hasActiveSubscription) {
+  // Allow admin to bypass premium checks
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  if (!hasActiveAccess) {
     return <SubscribeCta />;
   }
 

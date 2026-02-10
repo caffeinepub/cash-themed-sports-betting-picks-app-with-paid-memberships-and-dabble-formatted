@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { SubscriptionStatus, ReferralStatus } from '../backend';
+import type { SubscriptionStatus, ReferralStatus, PremiumSource, UserProfile } from '../backend';
 
 export function useSubscription() {
   const { actor, isFetching } = useActor();
@@ -14,7 +14,7 @@ export function useSubscription() {
     enabled: !!actor && !isFetching,
   });
 
-  const profileQuery = useQuery<{ referral?: ReferralStatus } | null>({
+  const profileQuery = useQuery<UserProfile | null>({
     queryKey: ['currentUserProfile'],
     queryFn: async () => {
       if (!actor) return null;
@@ -23,6 +23,19 @@ export function useSubscription() {
     enabled: !!actor && !isFetching,
   });
 
+  const premiumSourceQuery = useQuery<PremiumSource>({
+    queryKey: ['premiumStatus'],
+    queryFn: async () => {
+      if (!actor) return 'none' as PremiumSource;
+      return actor.checkPremiumStatus();
+    },
+    enabled: !!actor && !isFetching,
+  });
+
+  // Use backend-reported premium source as authoritative signal
+  const hasActiveAccess = premiumSourceQuery.data !== 'none' && premiumSourceQuery.data !== undefined;
+
+  // Keep expiry-based checks for UI details
   const hasActiveSubscription =
     subscriptionQuery.data !== null &&
     subscriptionQuery.data !== undefined &&
@@ -33,14 +46,25 @@ export function useSubscription() {
     profileQuery.data?.referral !== undefined &&
     Number(profileQuery.data.referral.expiresAt) > Date.now() * 1000000;
 
-  const hasActiveAccess = hasActiveSubscription || hasActiveReferral;
+  const hasManualPremium = profileQuery.data?.hasManualPremium === true;
+
+  // Ensure loading states are consistent
+  const isLoading =
+    subscriptionQuery.isLoading || profileQuery.isLoading || premiumSourceQuery.isLoading || isFetching;
 
   return {
     subscriptionStatus: subscriptionQuery.data,
     referralStatus: profileQuery.data?.referral,
+    hasManualPremium,
+    premiumSource: premiumSourceQuery.data,
     hasActiveSubscription,
     hasActiveReferral,
     hasActiveAccess,
-    isLoading: subscriptionQuery.isLoading || profileQuery.isLoading,
+    isLoading,
+    refetch: async () => {
+      await subscriptionQuery.refetch();
+      await profileQuery.refetch();
+      await premiumSourceQuery.refetch();
+    },
   };
 }

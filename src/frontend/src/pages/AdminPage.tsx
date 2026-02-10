@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import AdminGate from '../components/AdminGate';
 import StripePaymentSetup from '../components/StripePaymentSetup';
 import ReferralCodesAdminPanel from '../components/ReferralCodesAdminPanel';
+import ManualPremiumGrantCard from '../components/ManualPremiumGrantCard';
 import { useIsStripeConfigured } from '../hooks/useStripeCheckout';
 import {
   useSetDepthChart,
@@ -17,7 +18,7 @@ import {
   useCreatePrediction,
 } from '../hooks/useAdmin';
 import { toast } from 'sonner';
-import { Shield, Database, TrendingUp, FileText, CreditCard, Ticket } from 'lucide-react';
+import { Shield, Database, TrendingUp, FileText, CreditCard, Ticket, Crown } from 'lucide-react';
 
 function AdminContent() {
   const { data: isStripeConfigured, isLoading: stripeLoading } = useIsStripeConfigured();
@@ -179,13 +180,14 @@ function AdminContent() {
         </div>
 
         <Tabs defaultValue="predictions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="predictions">Predictions</TabsTrigger>
             <TabsTrigger value="depth">Depth Charts</TabsTrigger>
             <TabsTrigger value="injuries">Injuries</TabsTrigger>
             <TabsTrigger value="coaching">Coaching</TabsTrigger>
             <TabsTrigger value="news">News</TabsTrigger>
             <TabsTrigger value="referrals">Referral Codes</TabsTrigger>
+            <TabsTrigger value="premium">Premium Access</TabsTrigger>
           </TabsList>
 
           <TabsContent value="predictions">
@@ -467,6 +469,10 @@ function AdminContent() {
 
           <TabsContent value="referrals">
             <ReferralCodesAdminPanel />
+          </TabsContent>
+
+          <TabsContent value="premium">
+            <ManualPremiumGrantCard />
           </TabsContent>
         </Tabs>
       </div>

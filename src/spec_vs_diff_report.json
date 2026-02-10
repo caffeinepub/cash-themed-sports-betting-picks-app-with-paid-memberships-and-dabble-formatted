@@ -1,32 +1,54 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T23:33:01.140Z",
-  "summary": "REQ-21 and REQ-22 appear implemented via a new global fixed cash-themed gradient background applied to the body (light/dark variants) and an updated HeroBranding overlay using the existing cash pattern asset with stronger opacity and green/gold gradients. AppLayout now enforces full-viewport height via min-h-screen. There are also some additional, unrequested landing-page visual tweaks (card borders/icons).",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-10T00:12:49.115Z",
+  "summary": "REQ-30 appears partially implemented: AppHeader now shows a “Predictions” link for authenticated users in the desktop nav, aligning with the goal of relying on PremiumGate for access control. However, the diff is truncated before the mobile menu links, and there is no visible evidence in the provided diff that routing/Predictions page behavior was adjusted (if needed) to ensure the PremiumGate subscribe CTA appears when a signed-in user lacks access.",
+  "missing_requirements": [
     {
-      "description": "Additional landing page styling updates to feature cards (cash-gold borders/hover states and icon color tweaks) beyond the requested hero/background adjustments.",
-      "reason": "BuildRequest only asked for global AppLayout background treatment and landing hero pattern/gradient integration; it did not request changing card border colors/hover styling or icon coloring in other landing sections.",
+      "id": "REQ-30",
+      "requirement": "When a user is signed in but does not have active access, the header (desktop and mobile) still shows a \"Predictions\" link.",
+      "reason": "Desktop nav shows Predictions for authenticated users, but the mobile menu portion is truncated before the relevant links, so mobile behavior cannot be verified from the diff evidence.",
       "evidence": [
-        "frontend/src/pages/LandingPage.tsx"
+        "frontend/src/components/AppHeader.tsx (truncated)"
       ]
     },
     {
-      "description": "Introduction of custom cash-themed utility classes (text/bg/border/fill cash green/gold) beyond the explicitly requested background/hero changes.",
-      "reason": "The request focuses on global background and hero background treatment; adding a broader utility palette is not explicitly requested (though it may support the theme work).",
+      "id": "REQ-30",
+      "requirement": "Clicking \"Predictions\" as a signed-in but non-premium user routes to the Predictions page and shows the existing subscribe call-to-action (from PremiumGate), rather than hiding the page via navigation.",
+      "reason": "The diff only shows navigation changes in AppHeader; it does not provide evidence of Predictions page gating/CTA behavior (e.g., PremiumGate invocation) or any routing change beyond adding the link.",
       "evidence": [
-        "frontend/src/index.css"
+        "frontend/src/components/AppHeader.tsx (truncated)"
       ]
     }
   ],
-  "confidence": 0.74,
+  "hallucinated_features": [
+    {
+      "description": "Added/modified URL parameter + sessionStorage utilities for persisted URL parameters and hash query parsing.",
+      "reason": "Not requested by REQ-30, which is limited to navigation access to Predictions for authenticated non-premium users.",
+      "evidence": [
+        "frontend/src/utils/urlParams.ts (truncated)"
+      ]
+    },
+    {
+      "description": "Added a \"Send Support\" navigation link with a DollarSign icon in the main header navigation.",
+      "reason": "Not requested by REQ-30 (navigation change requested only for ensuring Predictions is visible/accessible for authenticated users regardless of membership).",
+      "evidence": [
+        "frontend/src/components/AppHeader.tsx (truncated)"
+      ]
+    },
+    {
+      "description": "Added a lock icon next to the Predictions nav label.",
+      "reason": "REQ-30 did not request iconography or labeling changes, only that the link be present and rely on PremiumGate for upsell/access restriction.",
+      "evidence": [
+        "frontend/src/components/AppHeader.tsx (truncated)"
+      ]
+    }
+  ],
+  "confidence": 0.58,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/components/AppLayout.tsx",
-    "frontend/src/components/HeroBranding.tsx",
-    "frontend/src/index.css",
-    "frontend/src/pages/LandingPage.tsx",
+    "frontend/src/components/AppHeader.tsx",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json"
   ]
 }

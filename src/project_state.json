@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 17,
   "summary": "Build a colorful, cash-themed sports betting predictions app with paid monthly/yearly memberships, AI-driven picks tailored to the Dabble platform, a tiered risk/reward presentation system, and prominent disclaimers/terms (including no-guarantee and limited liability), with optional Cash App–friendly UI elements like displaying a $Cashtag for manual tips (no direct Cash App integration).",
   "architectural_notes": [
     "Do not implement direct Cash App transfers or routing funds to a personal $Cashtag; only manual display of $Cashtag for optional tips/donations is allowed.",
@@ -161,6 +161,70 @@
         "REQ-22"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-implement-a-reliable-post-stripe-payment-activation-flow-so-that-users-who-have-already-paid-can-regain-premium-access-after-logging-in",
+      "title": "Implement a reliable post-Stripe-payment activation flow so that users who have already paid can regain premium access after logging in.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-in-app-restore-premium-access-button-flow-for-authenticated-users-who-already-paid-which-forces-a-refresh-of-premium-access-status-and-clearly-communicates-the-result-in-english",
+      "title": "Add an in-app \"Restore Premium Access\" button/flow for authenticated users who already paid, which forces a refresh of premium/access status and clearly communicates the result in English.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-only-backend-capability-and-corresponding-admin-ui-to-manually-grant-premium-access-to-a-specific-user-principal-to-fulfill-requests-like-give-me-premium-access",
+      "title": "Add an admin-only backend capability and corresponding Admin UI to manually grant premium access to a specific user principal (to fulfill requests like \"give me premium access\").",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-stripe-subscription-purchase-and-checkout-flow-is-reliably-usable-end-to-end-from-the-pricing-page-including-clear-error-handling-when-stripe-is-not-configured",
+      "title": "Ensure the Stripe subscription purchase and checkout flow is reliably usable end-to-end from the Pricing page, including clear error handling when Stripe is not configured.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-harden-the-payment-success-activation-flow-so-a-user-who-completed-stripe-checkout-can-successfully-activate-premium-access-even-if-they-arrive-at-the-success-url-while-logged-out-and-provide-clear-actionable-english-messaging",
+      "title": "Harden the payment success activation flow so a user who completed Stripe checkout can successfully activate premium access even if they arrive at the success URL while logged out, and provide clear, actionable English messaging.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-paid-users-active-stripe-subscription-active-referral-access-or-manual-premium-grant-can-access-the-ai-generated-dabble-picks-content-everywhere-it-is-premium-gated",
+      "title": "Ensure paid users (active Stripe subscription, active referral access, or manual premium grant) can access the AI-generated Dabble picks content everywhere it is premium-gated.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admin-creator-account-me-can-always-access-the-ai-generated-dabble-picks-even-without-an-active-stripe-subscription-by-aligning-backend-premium-status-reporting-and-frontend-premium-gating",
+      "title": "Ensure the admin/creator account (“me”) can always access the AI-generated Dabble picks, even without an active Stripe subscription, by aligning backend premium-status reporting and frontend premium gating.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-main-navigation-so-authenticated-users-can-always-navigate-to-the-predictions-page-even-when-they-do-not-yet-have-an-active-membership-and-rely-on-the-existing-premiumgate-upsell-to-restrict-access",
+      "title": "Update the main navigation so authenticated users can always navigate to the Predictions page, even when they do not yet have an active membership, and rely on the existing PremiumGate upsell to restrict access.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -251,6 +315,18 @@
     {
       "id": "AR-14",
       "summary": "Update UI background styling to better fit the page layout and use a more vibrant cash-themed background.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "Provide an admin/creator mechanism to grant premium access to specific users (manual premium access override) so the requester can be given premium access without Stripe purchase flow.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Add a clear in-app 'Access/Restore Premium' button/flow for users who already paid, so they can regain premium access after logging in (e.g., re-check subscription status and refresh gating).",
       "reqIds": [],
       "status": "pending"
     }

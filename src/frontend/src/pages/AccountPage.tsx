@@ -1,9 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '../hooks/useUserProfile';
 import { useSubscription } from '../hooks/useSubscription';
-import { User, Mail, CreditCard, Calendar, Shield } from 'lucide-react';
+import { useRestorePremiumAccess } from '../hooks/useRestorePremiumAccess';
+import { useIsAdmin } from '../hooks/useAdmin';
+import { User, Mail, CreditCard, Calendar, Shield, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import LoginButton from '../components/LoginButton';
 import AccountProfileEditor from '../components/AccountProfileEditor';
 import RedeemReferralCodeCard from '../components/RedeemReferralCodeCard';
@@ -11,9 +15,22 @@ import RedeemReferralCodeCard from '../components/RedeemReferralCodeCard';
 export default function AccountPage() {
   const { identity } = useInternetIdentity();
   const { data: userProfile, isLoading: profileLoading } = useGetCallerUserProfile();
-  const { subscriptionStatus, referralStatus, hasActiveAccess, isLoading: subLoading } = useSubscription();
+  const { subscriptionStatus, referralStatus, hasActiveAccess, premiumSource, isLoading: subLoading } =
+    useSubscription();
+  const { data: isAdmin, isLoading: adminLoading } = useIsAdmin();
+  const restorePremiumAccess = useRestorePremiumAccess();
 
   const isAuthenticated = !!identity;
+
+  const handleRestoreAccess = async () => {
+    try {
+      await restorePremiumAccess.mutateAsync();
+      toast.success('Premium access status refreshed');
+    } catch (error) {
+      console.error('Restore error:', error);
+      toast.error('Failed to refresh premium access');
+    }
+  };
 
   if (!isAuthenticated) {
     return (
@@ -27,7 +44,7 @@ export default function AccountPage() {
     );
   }
 
-  if (profileLoading || subLoading) {
+  if (profileLoading || subLoading || adminLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cash-gold"></div>
@@ -37,7 +54,19 @@ export default function AccountPage() {
 
   const subscriptionExpiresAt = subscriptionStatus ? new Date(Number(subscriptionStatus.expiresAt) / 1000000) : null;
   const referralExpiresAt = referralStatus ? new Date(Number(referralStatus.expiresAt) / 1000000) : null;
-  const planName = subscriptionStatus?.plan === 'monthly' ? 'Monthly' : subscriptionStatus?.plan === 'yearly' ? 'Yearly' : 'None';
+  const planName =
+    subscriptionStatus?.plan === 'monthly' ? 'Monthly' : subscriptionStatus?.plan === 'yearly' ? 'Yearly' : 'None';
+
+  const getPremiumSourceLabel = () => {
+    if (isAdmin) return 'Admin Access';
+    if (premiumSource === 'manual') return 'Manual Grant';
+    if (premiumSource === 'stripe') return 'Stripe Subscription';
+    if (premiumSource === 'referral') return 'Referral Code';
+    return 'None';
+  };
+
+  // Determine if user has active access (including admin)
+  const effectiveHasActiveAccess = hasActiveAccess || isAdmin;
 
   return (
     <div className="container py-12">
@@ -84,73 +113,82 @@ export default function AccountPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-cash-gold" />
-                Premium Access Status
+                Premium Access
               </CardTitle>
-              <CardDescription>Your current access</CardDescription>
+              <CardDescription>Your subscription status</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <div className="text-sm text-muted-foreground mb-2">Status</div>
-                <Badge
-                  variant={hasActiveAccess ? 'default' : 'outline'}
-                  className={
-                    hasActiveAccess
-                      ? 'bg-gradient-to-r from-cash-green to-cash-gold text-black'
-                      : 'border-muted-foreground/30'
-                  }
-                >
-                  {hasActiveAccess ? 'Active' : 'Inactive'}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <Badge variant={effectiveHasActiveAccess ? 'default' : 'secondary'} className="font-semibold">
+                  {effectiveHasActiveAccess ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
-              
+              {(premiumSource !== 'none' || isAdmin) && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Source</span>
+                  <span className="font-semibold text-sm">{getPremiumSourceLabel()}</span>
+                </div>
+              )}
               {subscriptionStatus && (
                 <>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Subscription Plan</div>
-                    <div className="font-semibold">{planName}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Plan</span>
+                    <span className="font-semibold">{planName}</span>
                   </div>
                   {subscriptionExpiresAt && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <div className="text-sm text-muted-foreground">Subscription Expires</div>
-                        <div className="font-semibold">{subscriptionExpiresAt.toLocaleDateString()}</div>
+                        <div className="text-sm text-muted-foreground">Expires</div>
+                        <div className="font-semibold text-sm">{subscriptionExpiresAt.toLocaleDateString()}</div>
                       </div>
                     </div>
                   )}
                 </>
               )}
-
               {referralStatus && (
                 <>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Referral Code</div>
-                    <div className="font-mono font-semibold">{referralStatus.code}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Referral Code</span>
+                    <span className="font-mono text-sm">{referralStatus.code}</span>
                   </div>
                   {referralExpiresAt && (
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <div className="text-sm text-muted-foreground">Referral Access Expires</div>
-                        <div className="font-semibold">{referralExpiresAt.toLocaleDateString()}</div>
+                        <div className="text-sm text-muted-foreground">Referral Expires</div>
+                        <div className="font-semibold text-sm">{referralExpiresAt.toLocaleDateString()}</div>
                       </div>
                     </div>
                   )}
                 </>
               )}
-
-              {!hasActiveAccess && (
-                <p className="text-sm text-muted-foreground">
-                  You don't have active premium access. Visit the pricing page to subscribe or redeem a referral code below.
-                </p>
-              )}
+              <Button
+                onClick={handleRestoreAccess}
+                disabled={restorePremiumAccess.isPending}
+                variant="outline"
+                className="w-full"
+              >
+                {restorePremiumAccess.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Restoring...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Restore Premium Access
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        <RedeemReferralCodeCard />
-
         <AccountProfileEditor userProfile={userProfile} />
+
+        <RedeemReferralCodeCard />
       </div>
     </div>
   );

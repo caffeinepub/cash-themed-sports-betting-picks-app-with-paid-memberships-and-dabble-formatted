@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-global-app-layout-background-so-it-better-fills-the-page-and-reads-as-a-more-vibrant-cash-theme-greens-gold-accents-while-keeping-content-readable-in-both-light-and-dark-modes",
-      "featureTitle": "Update the global app layout background so it better fills the page and reads as a more vibrant cash theme (greens + gold accents), while keeping content readable in both light and dark modes.",
+      "featureId": "feature-update-the-main-navigation-so-authenticated-users-can-always-navigate-to-the-predictions-page-even-when-they-do-not-yet-have-an-active-membership-and-rely-on-the-existing-premiumgate-upsell-to-restrict-access",
+      "featureTitle": "Update the main navigation so authenticated users can always navigate to the Predictions page, even when they do not yet have an active membership, and rely on the existing PremiumGate upsell to restrict access.",
       "files": [
-        "frontend/src/components/AppLayout.tsx",
-        "frontend/src/index.css"
+        "frontend/src/components/AppHeader.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,29 +18,7 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-21"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-adjust-the-cash-themed-pattern-gradient-usage-on-the-landing-hero-so-it-looks-more-vivid-and-better-integrated-with-the-rest-of-the-page-background-using-the-existing-generated-pattern-asset",
-      "featureTitle": "Adjust the cash-themed pattern/gradient usage on the landing hero so it looks more vivid and better integrated with the rest of the page background (using the existing generated pattern asset).",
-      "files": [
-        "frontend/src/components/HeroBranding.tsx",
-        "frontend/src/pages/LandingPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "stripe@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0"
-      ],
-      "testIds": [
-        "REQ-22"
+        "REQ-30"
       ],
       "confidence": "high"
     }

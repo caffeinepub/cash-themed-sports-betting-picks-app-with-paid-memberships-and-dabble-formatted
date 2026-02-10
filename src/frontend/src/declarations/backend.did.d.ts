@@ -29,7 +29,8 @@ export interface Prediction {
 }
 export type PremiumSource = { 'stripe' : null } |
   { 'referral' : null } |
-  { 'none' : null };
+  { 'none' : null } |
+  { 'manual' : null };
 export interface ReferralCodeStatus { 'code' : string, 'validUntil' : Time }
 export interface ReferralStatus { 'expiresAt' : Time, 'code' : string }
 export interface ShoppingItem {
@@ -73,6 +74,7 @@ export interface TransformationOutput {
   'headers' : Array<http_header>,
 }
 export interface UserProfile {
+  'hasManualPremium' : boolean,
   'referral' : [] | [ReferralStatus],
   'subscription' : [] | [SubscriptionStatus],
   'name' : string,
@@ -116,11 +118,14 @@ export interface _SERVICE {
   'getStripeSessionStatus' : ActorMethod<[string], StripeSessionStatus>,
   'getUpcomingMatches' : ActorMethod<[], Array<string>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'grantManualPremiumAccess' : ActorMethod<[Principal], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'isStripeConfigured' : ActorMethod<[], boolean>,
   'redeemReferralCode' : ActorMethod<[string], undefined>,
   'removeUpcomingMatch' : ActorMethod<[string], undefined>,
+  'revokeManualPremiumAccess' : ActorMethod<[Principal], undefined>,
   'revokeReferralCode' : ActorMethod<[string], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setCoachingStyle' : ActorMethod<[string, string], undefined>,
   'setDepthChart' : ActorMethod<[string, string], undefined>,
   'setInjuryReport' : ActorMethod<[string, string], undefined>,

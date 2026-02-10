@@ -116,6 +116,7 @@ export interface SubscriptionStatus {
     stripeSessionId: string;
 }
 export interface UserProfile {
+    hasManualPremium: boolean;
     referral?: ReferralStatus;
     subscription?: SubscriptionStatus;
     name: string;
@@ -128,7 +129,8 @@ export interface ReferralCodeStatus {
 export enum PremiumSource {
     stripe = "stripe",
     referral = "referral",
-    none = "none"
+    none = "none",
+    manual = "manual"
 }
 export enum SubscriptionPlan {
     monthly = "monthly",
@@ -164,11 +166,14 @@ export interface backendInterface {
     getStripeSessionStatus(sessionId: string): Promise<StripeSessionStatus>;
     getUpcomingMatches(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    grantManualPremiumAccess(user: Principal): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     isStripeConfigured(): Promise<boolean>;
     redeemReferralCode(code: string): Promise<void>;
     removeUpcomingMatch(matchId: string): Promise<void>;
+    revokeManualPremiumAccess(user: Principal): Promise<void>;
     revokeReferralCode(code: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setCoachingStyle(teamSportKey: string, data: string): Promise<void>;
     setDepthChart(teamSportKey: string, data: string): Promise<void>;
     setInjuryReport(playerTeamKey: string, data: string): Promise<void>;

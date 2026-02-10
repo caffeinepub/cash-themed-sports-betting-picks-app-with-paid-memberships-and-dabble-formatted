@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useCreateCheckoutSession } from '../hooks/useStripeCheckout';
+import { useCreateCheckoutSession, useIsStripeConfigured } from '../hooks/useStripeCheckout';
 import { getTermsAcceptance } from '../utils/termsAcceptance';
 import { toast } from 'sonner';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Sparkles, AlertCircle } from 'lucide-react';
 import ResponsibleGamblingDisclaimer from '../components/ResponsibleGamblingDisclaimer';
+import { SubscriptionPlan } from '../backend';
 
 export default function PricingPage() {
   const navigate = useNavigate();
   const { identity } = useInternetIdentity();
   const createCheckout = useCreateCheckoutSession();
+  const { data: isStripeConfigured, isLoading: stripeConfigLoading } = useIsStripeConfigured();
   const [processingPlan, setProcessingPlan] = useState<'monthly' | 'yearly' | null>(null);
 
   const isAuthenticated = !!identity;
@@ -23,11 +26,15 @@ export default function PricingPage() {
       return;
     }
 
-    // Check if terms have been accepted
     const termsAcceptance = getTermsAcceptance();
     if (!termsAcceptance.accepted) {
       toast.error('Please accept the Terms of Service first');
       navigate({ to: '/terms' });
+      return;
+    }
+
+    if (!isStripeConfigured) {
+      toast.error('Payment system is not configured. Please contact support.');
       return;
     }
 
@@ -55,14 +62,16 @@ export default function PricingPage() {
           ];
 
     try {
-      const session = await createCheckout.mutateAsync(items);
+      const subscriptionPlan: SubscriptionPlan = plan === 'monthly' ? SubscriptionPlan.monthly : SubscriptionPlan.yearly;
+      const session = await createCheckout.mutateAsync({ items, plan: subscriptionPlan });
       if (!session?.url) {
         throw new Error('Stripe session missing url');
       }
       window.location.href = session.url;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error);
-      toast.error('Failed to create checkout session');
+      const errorMessage = error?.message || 'Failed to create checkout session';
+      toast.error(errorMessage);
       setProcessingPlan(null);
     }
   };
@@ -76,6 +85,16 @@ export default function PricingPage() {
             Get unlimited access to AI-powered predictions with transparent analysis
           </p>
         </div>
+
+        {!stripeConfigLoading && !isStripeConfigured && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Payment System Unavailable</AlertTitle>
+            <AlertDescription>
+              The payment system is currently not configured. Please contact support to enable subscriptions.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Card className="border-cash-gold/30 relative overflow-hidden">
@@ -113,7 +132,7 @@ export default function PricingPage() {
               </ul>
               <Button
                 onClick={() => handleSubscribe('monthly')}
-                disabled={!isAuthenticated || processingPlan !== null}
+                disabled={!isAuthenticated || processingPlan !== null || !isStripeConfigured}
                 className="w-full bg-gradient-to-r from-cash-green to-cash-gold hover:opacity-90 text-black font-semibold"
               >
                 {processingPlan === 'monthly' ? (
@@ -171,7 +190,7 @@ export default function PricingPage() {
               </ul>
               <Button
                 onClick={() => handleSubscribe('yearly')}
-                disabled={!isAuthenticated || processingPlan !== null}
+                disabled={!isAuthenticated || processingPlan !== null || !isStripeConfigured}
                 className="w-full bg-gradient-to-r from-cash-green to-cash-gold hover:opacity-90 text-black font-semibold"
               >
                 {processingPlan === 'yearly' ? (
