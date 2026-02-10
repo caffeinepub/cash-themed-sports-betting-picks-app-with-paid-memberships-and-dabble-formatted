@@ -1,22 +1,89 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Enable Predictions navigation for signed-in non-premium users",
+  "title": "Admin Support diagnostics + manual premium revoke UI, and premium gating consistency",
   "requirements": [
     {
-      "id": "REQ-30",
-      "summary": "Show the Predictions link in header navigation for any authenticated user (desktop + mobile) and rely on existing PremiumGate upsell for non-premium access.",
+      "id": "REQ-35",
+      "summary": "Add an Admin Support section on the Admin page to diagnose a user's premium status by Principal ID and display an English diagnostic report.",
       "acceptanceCriteria": [
-        "When a user is signed in but does not have active access, the header (desktop and mobile) still shows a \"Predictions\" link.",
-        "Clicking \"Predictions\" as a signed-in but non-premium user routes to the Predictions page and shows the existing subscribe call-to-action (from PremiumGate), rather than hiding the page via navigation.",
-        "When a user has active access (or is admin), Predictions continues to behave as it does today (full access).",
-        "All user-facing text remains in English."
+        "The Admin page includes a dedicated “Admin Support” area (tab or card) visible only to admins (behind the existing AdminGate).",
+        "An admin can enter a Principal ID and request a lookup; the UI displays a readable status summary using only English text.",
+        "Loading and error states are handled and surfaced to the admin (e.g., invalid principal input, unauthorized, user not found/no profile).",
+        "The UI does not require editing any files under frontend/src/components/ui or other immutable paths."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/AppHeader.tsx",
+          "path": "frontend/src/hooks/useAdminPremiumDiagnosis.ts",
+          "operation": "create",
+          "description": "Create a React Query hook that calls the backend capability adminPremiumDiagnosis(target) and returns a cached diagnostic result keyed by the target principal text, including English-friendly error mapping for unauthorized and invalid principal input. Use the authorization component's role-based access model indirectly by relying on existing admin-only backend checks; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/AdminSupportCard.tsx",
+          "operation": "create",
+          "description": "Implement an Admin Support UI card that lets an admin enter a Principal ID, triggers the diagnosis lookup via useAdminPremiumDiagnosis, and renders a clear English report including: premium active/inactive, premium source, subscription/referral expirations (if present), and whether hasManualPremium is set. Include explicit loading, empty, and error states; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AdminPage.tsx",
           "operation": "modify",
-          "description": "Update desktop and mobile nav rendering so the \"Predictions\" link is displayed whenever the user is authenticated, regardless of membership/subscription state, while keeping the route pointing to /predictions. Optionally adjust iconography based on access state, but do not change user-facing text (English only). Use existing auth state from the authorization-based Internet Identity flow (via useInternetIdentity) and existing subscription/access signals (via useSubscription) as needed. Verify the component's usage instructions before implementing."
+          "description": "Wire the new Admin Support section into the existing Admin page Tabs (e.g., add a new “Admin Support” tab or a new card under an existing tab). Keep it behind the existing AdminGate (authorization component admin gating already in place); verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-36",
+      "summary": "Extend admin manual premium tooling to support both grant and revoke for a Principal ID, with immediate Admin Support refresh after changes.",
+      "acceptanceCriteria": [
+        "Admins can revoke manual premium access for a Principal ID from the Admin UI (confirming action and showing success/error toasts in English).",
+        "After grant or revoke, relevant React Query caches are invalidated/refetched so the Admin Support status view updates without a full page reload.",
+        "Backend revoke behavior uses the existing admin-only revokeManualPremiumAccess capability (or an equivalent admin-only method) and returns meaningful errors for invalid cases (e.g., no user record) that the frontend can present."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useManualPremiumRevoke.ts",
+          "operation": "create",
+          "description": "Add a React Query mutation hook that parses a Principal ID string, calls the backend capability revokeManualPremiumAccess(user), and on success invalidates premium-related queries plus any admin diagnosis cache for the affected principal so the Admin Support report updates immediately. Use the authorization component model by assuming backend admin-only enforcement; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useManualPremiumGrant.ts",
+          "operation": "modify",
+          "description": "Extend query invalidation to also refresh any Admin Support diagnosis cache for the granted principal (in addition to existing premium/subscription/profile query invalidations), ensuring the Admin Support UI updates immediately after a grant; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/ManualPremiumGrantCard.tsx",
+          "operation": "modify",
+          "description": "Update the existing manual premium admin card to support revoke as well as grant: add a revoke action (with confirmation) that uses useManualPremiumRevoke, and show success/error toasts in English. Ensure invalid principal input and backend errors are surfaced clearly. Ensure actions trigger React Query invalidations so Admin Support reflects updates immediately; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/AdminSupportCard.tsx",
+          "operation": "modify",
+          "description": "After a successful grant or revoke (from the manual premium tooling), ensure the Admin Support report for the currently inspected principal is refreshed immediately (via query invalidation/refetch), without requiring a full page reload; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-37",
+      "summary": "Keep premium gating consistent by relying on backend-reported premium status so the creator/admin never sees premium upsell in PremiumGate screens, and ensure Account premium status shows Active for creator/admin.",
+      "acceptanceCriteria": [
+        "For the creator/admin principal, PremiumGate never renders the SubscribeCta for premium content screens when logged in.",
+        "Account page “Premium Access” status shows Active for the creator/admin principal when logged in.",
+        "No user-facing text changes introduce non-English content."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PremiumGate.tsx",
+          "operation": "modify",
+          "description": "Ensure PremiumGate decisions remain driven by backend-reported premium status from useSubscription (premiumSource != none), and avoid any frontend-only assumptions that could cause the creator/admin to see SubscribeCta while logged in. Keep admin bypass behavior compatible with the authorization component’s admin role checks; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/AccountPage.tsx",
+          "operation": "modify",
+          "description": "Update the Premium Access “Source” label/description mapping to handle backend PremiumSource values consistently (including 'creator' and 'admin') in English, while keeping the displayed “Status” Active when backend indicates access for the creator/admin; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useSubscription.ts",
+          "operation": "modify",
+          "description": "Confirm and, if needed, adjust the derived hasActiveAccess calculation to remain strictly based on backend-reported premiumSource (non-'none') so PremiumGate and Account remain consistent with backend premium gating; verify the component's usage instructions before implementing."
         }
       ]
     }

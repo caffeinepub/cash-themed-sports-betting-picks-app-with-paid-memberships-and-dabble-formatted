@@ -10,6 +10,10 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AdminPremiumDiagnosis {
+  'premiumSource' : PremiumSource,
+  'user' : [] | [UserProfile],
+}
 export type BettingMarket = { 'sameGameParlays' : null } |
   { 'overUnder' : null } |
   { 'alternativeSpreads' : null } |
@@ -28,7 +32,9 @@ export interface Prediction {
   'matchDate' : Time,
 }
 export type PremiumSource = { 'stripe' : null } |
+  { 'creator' : null } |
   { 'referral' : null } |
+  { 'admin' : null } |
   { 'none' : null } |
   { 'manual' : null };
 export interface ReferralCodeStatus { 'code' : string, 'validUntil' : Time }
@@ -93,6 +99,7 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'activateSubscription' : ActorMethod<[string, SubscriptionPlan], undefined>,
   'addUpcomingMatch' : ActorMethod<[string], undefined>,
+  'adminPremiumDiagnosis' : ActorMethod<[Principal], AdminPremiumDiagnosis>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'checkPremiumStatus' : ActorMethod<[], PremiumSource>,
   'checkSubscriptionStatus' : ActorMethod<[], [] | [SubscriptionStatus]>,

@@ -12,22 +12,39 @@ export const SubscriptionPlan = IDL.Variant({
   'monthly' : IDL.Null,
   'yearly' : IDL.Null,
 });
-export const UserRole = IDL.Variant({
-  'admin' : IDL.Null,
-  'user' : IDL.Null,
-  'guest' : IDL.Null,
-});
 export const PremiumSource = IDL.Variant({
   'stripe' : IDL.Null,
+  'creator' : IDL.Null,
   'referral' : IDL.Null,
+  'admin' : IDL.Null,
   'none' : IDL.Null,
   'manual' : IDL.Null,
 });
 export const Time = IDL.Int;
+export const ReferralStatus = IDL.Record({
+  'expiresAt' : Time,
+  'code' : IDL.Text,
+});
 export const SubscriptionStatus = IDL.Record({
   'expiresAt' : Time,
   'plan' : SubscriptionPlan,
   'stripeSessionId' : IDL.Text,
+});
+export const UserProfile = IDL.Record({
+  'hasManualPremium' : IDL.Bool,
+  'referral' : IDL.Opt(ReferralStatus),
+  'subscription' : IDL.Opt(SubscriptionStatus),
+  'name' : IDL.Text,
+  'email' : IDL.Opt(IDL.Text),
+});
+export const AdminPremiumDiagnosis = IDL.Record({
+  'premiumSource' : PremiumSource,
+  'user' : IDL.Opt(UserProfile),
+});
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
 });
 export const ShoppingItem = IDL.Record({
   'productName' : IDL.Text,
@@ -69,17 +86,6 @@ export const ReferralCodeStatus = IDL.Record({
   'code' : IDL.Text,
   'validUntil' : Time,
 });
-export const ReferralStatus = IDL.Record({
-  'expiresAt' : Time,
-  'code' : IDL.Text,
-});
-export const UserProfile = IDL.Record({
-  'hasManualPremium' : IDL.Bool,
-  'referral' : IDL.Opt(ReferralStatus),
-  'subscription' : IDL.Opt(SubscriptionStatus),
-  'name' : IDL.Text,
-  'email' : IDL.Opt(IDL.Text),
-});
 export const StripeSessionStatus = IDL.Variant({
   'completed' : IDL.Record({
     'userPrincipal' : IDL.Opt(IDL.Text),
@@ -114,6 +120,11 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'activateSubscription' : IDL.Func([IDL.Text, SubscriptionPlan], [], []),
   'addUpcomingMatch' : IDL.Func([IDL.Text], [], []),
+  'adminPremiumDiagnosis' : IDL.Func(
+      [IDL.Principal],
+      [AdminPremiumDiagnosis],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'checkPremiumStatus' : IDL.Func([], [PremiumSource], ['query']),
   'checkSubscriptionStatus' : IDL.Func(
@@ -193,22 +204,36 @@ export const idlFactory = ({ IDL }) => {
     'monthly' : IDL.Null,
     'yearly' : IDL.Null,
   });
-  const UserRole = IDL.Variant({
-    'admin' : IDL.Null,
-    'user' : IDL.Null,
-    'guest' : IDL.Null,
-  });
   const PremiumSource = IDL.Variant({
     'stripe' : IDL.Null,
+    'creator' : IDL.Null,
     'referral' : IDL.Null,
+    'admin' : IDL.Null,
     'none' : IDL.Null,
     'manual' : IDL.Null,
   });
   const Time = IDL.Int;
+  const ReferralStatus = IDL.Record({ 'expiresAt' : Time, 'code' : IDL.Text });
   const SubscriptionStatus = IDL.Record({
     'expiresAt' : Time,
     'plan' : SubscriptionPlan,
     'stripeSessionId' : IDL.Text,
+  });
+  const UserProfile = IDL.Record({
+    'hasManualPremium' : IDL.Bool,
+    'referral' : IDL.Opt(ReferralStatus),
+    'subscription' : IDL.Opt(SubscriptionStatus),
+    'name' : IDL.Text,
+    'email' : IDL.Opt(IDL.Text),
+  });
+  const AdminPremiumDiagnosis = IDL.Record({
+    'premiumSource' : PremiumSource,
+    'user' : IDL.Opt(UserProfile),
+  });
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
   });
   const ShoppingItem = IDL.Record({
     'productName' : IDL.Text,
@@ -250,14 +275,6 @@ export const idlFactory = ({ IDL }) => {
     'code' : IDL.Text,
     'validUntil' : Time,
   });
-  const ReferralStatus = IDL.Record({ 'expiresAt' : Time, 'code' : IDL.Text });
-  const UserProfile = IDL.Record({
-    'hasManualPremium' : IDL.Bool,
-    'referral' : IDL.Opt(ReferralStatus),
-    'subscription' : IDL.Opt(SubscriptionStatus),
-    'name' : IDL.Text,
-    'email' : IDL.Opt(IDL.Text),
-  });
   const StripeSessionStatus = IDL.Variant({
     'completed' : IDL.Record({
       'userPrincipal' : IDL.Opt(IDL.Text),
@@ -289,6 +306,11 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'activateSubscription' : IDL.Func([IDL.Text, SubscriptionPlan], [], []),
     'addUpcomingMatch' : IDL.Func([IDL.Text], [], []),
+    'adminPremiumDiagnosis' : IDL.Func(
+        [IDL.Principal],
+        [AdminPremiumDiagnosis],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'checkPremiumStatus' : IDL.Func([], [PremiumSource], ['query']),
     'checkSubscriptionStatus' : IDL.Func(

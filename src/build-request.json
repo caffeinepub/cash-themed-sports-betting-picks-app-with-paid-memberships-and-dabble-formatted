@@ -1,37 +1,112 @@
 {
   "kind": "build_request",
-  "title": "Enable purchase and memberships access paths",
+  "title": "Ensure creator always has premium access and add admin support tools",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-30",
-      "text": "Update the main navigation so authenticated users can always navigate to the Predictions page, even when they do not yet have an active membership, and rely on the existing PremiumGate upsell to restrict access.",
+      "id": "REQ-33",
+      "text": "Ensure the configured creator/admin principal always has premium access in all backend premium checks, regardless of any stored UserProfile data (including missing profile, expired Stripe subscription, expired referral, or hasManualPremium=false).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make sure  always have premium access and admin support"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the caller principal text equals the configured creator/admin principal in backend/main.mo, backend methods that gate premium content treat the caller as premium-active.",
+        "backend/main.mo checkPremiumStatus() returns a non-#none PremiumSource for the creator/admin principal even if the creator has no UserProfile record.",
+        "No caller can gain creator/admin premium access by modifying any UserProfile fields; the creator/admin principal check is solely based on the caller principal."
+      ]
+    },
+    {
+      "id": "REQ-34",
+      "text": "Add an admin support backend API that allows an admin to diagnose a specific user’s premium access by principal, returning (at minimum) the target user’s UserProfile (if any) and a computed premium status/source consistent with the same logic used for premium gating.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make sure  always have premium access and admin support"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The new backend method is admin-only (traps or rejects for non-admin callers).",
+        "Given a target principal, the method returns the stored UserProfile (or null) and a computed premium status/source derived from the same rules as checkPremiumStatus/hasPremiumAccess.",
+        "The method does not mutate state.",
+        "The method supports diagnosing users even if they do not yet have a UserProfile record."
+      ]
+    },
+    {
+      "id": "REQ-35",
+      "text": "Add an “Admin Support” section to the existing Admin page UI that lets an admin enter a user Principal ID, fetch the user’s access diagnostic report, and display clear English status details (premium active/inactive, premium source, relevant expirations, and whether a manual premium grant is set).",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-4"
         ],
         "quotes": [
-          "Enable purchase and memberships"
+          "Make sure  always have premium access and admin support"
         ]
       },
       "acceptanceCriteria": [
-        "When a user is signed in but does not have active access, the header (desktop and mobile) still shows a \"Predictions\" link.",
-        "Clicking \"Predictions\" as a signed-in but non-premium user routes to the Predictions page and shows the existing subscribe call-to-action (from PremiumGate), rather than hiding the page via navigation.",
-        "When a user has active access (or is admin), Predictions continues to behave as it does today (full access).",
-        "All user-facing text remains in English."
+        "The Admin page includes a dedicated “Admin Support” area (tab or card) visible only to admins (behind the existing AdminGate).",
+        "An admin can enter a Principal ID and request a lookup; the UI displays a readable status summary using only English text.",
+        "Loading and error states are handled and surfaced to the admin (e.g., invalid principal input, unauthorized, user not found/no profile).",
+        "The UI does not require editing any files under frontend/src/components/ui or other immutable paths."
+      ]
+    },
+    {
+      "id": "REQ-36",
+      "text": "Extend the admin manual premium tooling so admins can both grant and revoke manual premium access for a specified Principal ID, and ensure the Admin Support UI reflects changes immediately after either action.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make sure  always have premium access and admin support"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admins can revoke manual premium access for a Principal ID from the Admin UI (confirming action and showing success/error toasts in English).",
+        "After grant or revoke, relevant React Query caches are invalidated/refetched so the Admin Support status view updates without a full page reload.",
+        "Backend revoke behavior uses the existing admin-only revokeManualPremiumAccess capability (or an equivalent admin-only method) and returns meaningful errors for invalid cases (e.g., no user record) that the frontend can present."
+      ]
+    },
+    {
+      "id": "REQ-37",
+      "text": "Ensure premium gating remains consistent across the app by relying on backend-reported premium status for access decisions, so the creator/admin account never sees the premium upsell in PremiumGate-protected screens.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Make sure  always have premium access and admin support"
+        ]
+      },
+      "acceptanceCriteria": [
+        "For the creator/admin principal, PremiumGate never renders the SubscribeCta for premium content screens when logged in.",
+        "Account page “Premium Access” status shows Active for the creator/admin principal when logged in.",
+        "No user-facing text changes introduce non-English content."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui (read-only).",
-    "Do not edit immutable frontend paths listed in SYSTEM_CONTEXT.",
-    "Backend must remain a single Motoko actor in backend/main.mo; only add migration.mo if an actual state upgrade is required."
+    "Backend must remain a single-actor Motoko canister; implement new logic in backend/main.mo.",
+    "Only add backend/migration.mo if a state upgrade is required; otherwise do not create a migration.",
+    "Do not modify any paths listed in frontend.immutablePaths (including frontend/src/components/ui, frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
+    "Keep all user-facing text in English."
   ],
   "nonGoals": [
-    "Do not add new membership plans beyond $25/month and $250/year.",
-    "Do not add new authentication methods (Internet Identity remains the only login).",
-    "Do not add any third-party payment providers beyond the existing Stripe flow."
+    "Implementing a real-time chat/support system.",
+    "Adding third-party auth providers or email/password login.",
+    "Integrating external databases or third-party customer support tools.",
+    "Changing subscription plan pricing or adding new subscription tiers."
   ],
   "imageRequirements": {
     "required": [],

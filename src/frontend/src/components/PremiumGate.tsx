@@ -43,11 +43,8 @@ export default function PremiumGate({ children, showPreview = false }: PremiumGa
     );
   }
 
-  // Allow admin to bypass premium checks
-  if (isAdmin) {
-    return <>{children}</>;
-  }
-
+  // Backend-reported premium status already includes admin/creator checks
+  // No need for separate admin bypass - hasActiveAccess covers all cases
   if (!hasActiveAccess) {
     return <SubscribeCta />;
   }

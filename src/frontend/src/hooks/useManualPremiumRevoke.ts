@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { Principal } from '@dfinity/principal';
 
-export function useManualPremiumGrant() {
+export function useManualPremiumRevoke() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
@@ -10,7 +10,7 @@ export function useManualPremiumGrant() {
     mutationFn: async (userPrincipal: string) => {
       if (!actor) throw new Error('Actor not available');
       const principal = Principal.fromText(userPrincipal);
-      return actor.grantManualPremiumAccess(principal);
+      return actor.revokeManualPremiumAccess(principal);
     },
     onSuccess: (_data, userPrincipal) => {
       // Invalidate all premium-related queries

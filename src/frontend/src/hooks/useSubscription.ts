@@ -33,6 +33,7 @@ export function useSubscription() {
   });
 
   // Use backend-reported premium source as authoritative signal
+  // This ensures creator/admin principals always have access
   const hasActiveAccess = premiumSourceQuery.data !== 'none' && premiumSourceQuery.data !== undefined;
 
   // Keep expiry-based checks for UI details

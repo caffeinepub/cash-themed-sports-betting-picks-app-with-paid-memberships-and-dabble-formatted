@@ -2,10 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-main-navigation-so-authenticated-users-can-always-navigate-to-the-predictions-page-even-when-they-do-not-yet-have-an-active-membership-and-rely-on-the-existing-premiumgate-upsell-to-restrict-access",
-      "featureTitle": "Update the main navigation so authenticated users can always navigate to the Predictions page, even when they do not yet have an active membership, and rely on the existing PremiumGate upsell to restrict access.",
+      "featureId": "feature-add-an-admin-support-section-to-the-existing-admin-page-ui-that-lets-an-admin-enter-a-user-principal-id-fetch-the-user-s-access-diagnostic-report-and-display-clear-english-status-details-premium-active-inactive-premium-source-relevant-expirations-and-whether-a-manual-premium-grant-is-set",
+      "featureTitle": "Add an “Admin Support” section to the existing Admin page UI that lets an admin enter a user Principal ID, fetch the user’s access diagnostic report, and display clear English status details (premium active/inactive, premium source, relevant expirations, and whether a manual premium grant is set).",
       "files": [
-        "frontend/src/components/AppHeader.tsx"
+        "frontend/src/components/AdminSupportCard.tsx",
+        "frontend/src/hooks/useAdminPremiumDiagnosis.ts",
+        "frontend/src/pages/AdminPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,7 +20,54 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-30"
+        "REQ-35"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-extend-the-admin-manual-premium-tooling-so-admins-can-both-grant-and-revoke-manual-premium-access-for-a-specified-principal-id-and-ensure-the-admin-support-ui-reflects-changes-immediately-after-either-action",
+      "featureTitle": "Extend the admin manual premium tooling so admins can both grant and revoke manual premium access for a specified Principal ID, and ensure the Admin Support UI reflects changes immediately after either action.",
+      "files": [
+        "frontend/src/components/AdminSupportCard.tsx",
+        "frontend/src/components/ManualPremiumGrantCard.tsx",
+        "frontend/src/hooks/useManualPremiumGrant.ts",
+        "frontend/src/hooks/useManualPremiumRevoke.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-36"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-premium-gating-remains-consistent-across-the-app-by-relying-on-backend-reported-premium-status-for-access-decisions-so-the-creator-admin-account-never-sees-the-premium-upsell-in-premiumgate-protected-screens",
+      "featureTitle": "Ensure premium gating remains consistent across the app by relying on backend-reported premium status for access decisions, so the creator/admin account never sees the premium upsell in PremiumGate-protected screens.",
+      "files": [
+        "frontend/src/components/PremiumGate.tsx",
+        "frontend/src/hooks/useSubscription.ts",
+        "frontend/src/pages/AccountPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "stripe@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-37"
       ],
       "confidence": "high"
     }

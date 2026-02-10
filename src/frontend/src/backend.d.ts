@@ -94,6 +94,10 @@ export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
 }
+export interface AdminPremiumDiagnosis {
+    premiumSource: PremiumSource;
+    user?: UserProfile;
+}
 export type StripeSessionStatus = {
     __kind__: "completed";
     completed: {
@@ -128,7 +132,9 @@ export interface ReferralCodeStatus {
 }
 export enum PremiumSource {
     stripe = "stripe",
+    creator = "creator",
     referral = "referral",
+    admin = "admin",
     none = "none",
     manual = "manual"
 }
@@ -144,6 +150,7 @@ export enum UserRole {
 export interface backendInterface {
     activateSubscription(sessionId: string, plan: SubscriptionPlan): Promise<void>;
     addUpcomingMatch(matchId: string): Promise<void>;
+    adminPremiumDiagnosis(target: Principal): Promise<AdminPremiumDiagnosis>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     checkPremiumStatus(): Promise<PremiumSource>;
     checkSubscriptionStatus(): Promise<SubscriptionStatus | null>;

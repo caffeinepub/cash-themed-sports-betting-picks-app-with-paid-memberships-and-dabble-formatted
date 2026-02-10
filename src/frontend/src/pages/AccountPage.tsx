@@ -1,12 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from '../hooks/useUserProfile';
 import { useSubscription } from '../hooks/useSubscription';
 import { useRestorePremiumAccess } from '../hooks/useRestorePremiumAccess';
 import { useIsAdmin } from '../hooks/useAdmin';
-import { User, Mail, CreditCard, Calendar, Shield, RefreshCw } from 'lucide-react';
+import { User, Mail, CreditCard, Calendar, Shield, RefreshCw, Copy, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import LoginButton from '../components/LoginButton';
 import AccountProfileEditor from '../components/AccountProfileEditor';
@@ -29,6 +30,18 @@ export default function AccountPage() {
     } catch (error) {
       console.error('Restore error:', error);
       toast.error('Failed to refresh premium access');
+    }
+  };
+
+  const handleCopyPrincipalId = async () => {
+    if (!identity) return;
+    const principalId = identity.getPrincipal().toString();
+    try {
+      await navigator.clipboard.writeText(principalId);
+      toast.success('Principal ID copied to clipboard');
+    } catch (error) {
+      console.error('Copy error:', error);
+      toast.error('Failed to copy Principal ID');
     }
   };
 
@@ -58,15 +71,22 @@ export default function AccountPage() {
     subscriptionStatus?.plan === 'monthly' ? 'Monthly' : subscriptionStatus?.plan === 'yearly' ? 'Yearly' : 'None';
 
   const getPremiumSourceLabel = () => {
-    if (isAdmin) return 'Admin Access';
+    if (premiumSource === 'creator') return 'Creator Access';
+    if (premiumSource === 'admin') return 'Admin Access';
     if (premiumSource === 'manual') return 'Manual Grant';
     if (premiumSource === 'stripe') return 'Stripe Subscription';
     if (premiumSource === 'referral') return 'Referral Code';
     return 'None';
   };
 
-  // Determine if user has active access (including admin)
-  const effectiveHasActiveAccess = hasActiveAccess || isAdmin;
+  const getPremiumSourceDescription = () => {
+    if (premiumSource === 'creator') return 'You are the creator and have permanent access to all premium features.';
+    if (premiumSource === 'admin') return 'You have permanent admin access to all premium features.';
+    if (premiumSource === 'manual') return 'You have been granted permanent premium access by an administrator.';
+    if (premiumSource === 'stripe') return 'Your premium access is active through your Stripe subscription.';
+    if (premiumSource === 'referral') return 'Your premium access is active through a referral code.';
+    return null;
+  };
 
   return (
     <div className="container py-12">
@@ -99,12 +119,23 @@ export default function AccountPage() {
                   </div>
                 </div>
               )}
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-muted-foreground" />
-                <div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-muted-foreground" />
                   <div className="text-sm text-muted-foreground">Principal ID</div>
-                  <div className="font-mono text-xs break-all">{identity?.getPrincipal().toString()}</div>
                 </div>
+                <div className="font-mono text-xs break-all bg-muted p-2 rounded">
+                  {identity?.getPrincipal().toString()}
+                </div>
+                <Button
+                  onClick={handleCopyPrincipalId}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Principal ID
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -120,15 +151,25 @@ export default function AccountPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge variant={effectiveHasActiveAccess ? 'default' : 'secondary'} className="font-semibold">
-                  {effectiveHasActiveAccess ? 'Active' : 'Inactive'}
+                <Badge variant={hasActiveAccess ? 'default' : 'secondary'} className="font-semibold">
+                  {hasActiveAccess ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
-              {(premiumSource !== 'none' || isAdmin) && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Source</span>
-                  <span className="font-semibold text-sm">{getPremiumSourceLabel()}</span>
-                </div>
+              {premiumSource !== 'none' && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Source</span>
+                    <span className="font-semibold text-sm">{getPremiumSourceLabel()}</span>
+                  </div>
+                  {getPremiumSourceDescription() && (
+                    <Alert className="bg-cash-gold/5 border-cash-gold/20">
+                      <Info className="h-4 w-4 text-cash-gold" />
+                      <AlertDescription className="text-sm">
+                        {getPremiumSourceDescription()}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </>
               )}
               {subscriptionStatus && (
                 <>
@@ -164,6 +205,20 @@ export default function AccountPage() {
                   )}
                 </>
               )}
+              
+              {!hasActiveAccess && (
+                <Alert className="bg-muted border-muted-foreground/20">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-sm space-y-2">
+                    <p className="font-semibold">No active premium access</p>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                      <li>If you already paid, use "Restore Premium Access" below</li>
+                      <li>To get permanent access, share your Principal ID with an admin for a manual grant</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Button
                 onClick={handleRestoreAccess}
                 disabled={restorePremiumAccess.isPending}
