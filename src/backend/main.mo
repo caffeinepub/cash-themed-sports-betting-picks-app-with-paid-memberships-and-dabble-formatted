@@ -126,6 +126,16 @@ actor {
   include MixinAuthorization(accessControlState);
 
   // --- Helper Functions ---
+  func isCallerAdminOrCreator(caller : Principal) : Bool {
+    caller.toText() == creatorPrincipal or AccessControl.isAdmin(accessControlState, caller);
+  };
+
+  func ensureAdminOrCreator(caller : Principal) {
+    if (not isCallerAdminOrCreator(caller)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+  };
+
   func hasActiveSubscription(caller : Principal) : Bool {
     switch (userProfiles.get(caller)) {
       case (null) { false };
@@ -158,7 +168,7 @@ actor {
   };
 
   func hasPremiumAccess(caller : Principal) : Bool {
-    if (caller.toText() == creatorPrincipal or AccessControl.isAdmin(accessControlState, caller)) {
+    if (isCallerAdminOrCreator(caller)) {
       return true;
     };
     hasActiveSubscription(caller) or hasActiveReferral(caller) or hasManualPremium(caller);
@@ -171,7 +181,7 @@ actor {
   };
 
   func ensureUserOrPrivilegedAccess(caller : Principal) {
-    if (AccessControl.isAdmin(accessControlState, caller) or caller.toText() == creatorPrincipal) {
+    if (isCallerAdminOrCreator(caller)) {
       return;
     };
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
@@ -196,9 +206,7 @@ actor {
   };
 
   public shared ({ caller }) func setStripeConfiguration(config : Stripe.StripeConfiguration) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     stripeConfig := ?config;
   };
 
@@ -224,9 +232,7 @@ actor {
   };
 
   public shared ({ caller }) func grantManualPremiumAccess(user : Principal) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can grant manual premium access");
-    };
+    ensureAdminOrCreator(caller);
 
     switch (userProfiles.get(user)) {
       case (null) {
@@ -250,9 +256,7 @@ actor {
   };
 
   public shared ({ caller }) func revokeManualPremiumAccess(user : Principal) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can revoke manual premium access");
-    };
+    ensureAdminOrCreator(caller);
 
     switch (userProfiles.get(user)) {
       case (null) {
@@ -269,9 +273,7 @@ actor {
   };
 
   public shared ({ caller }) func adminPremiumDiagnosis(target : Principal) : async AdminPremiumDiagnosis {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform premium diagnosis");
-    };
+    ensureAdminOrCreator(caller);
 
     let premiumSource = if (target.toText() == creatorPrincipal) {
       #creator;
@@ -301,7 +303,7 @@ actor {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (caller != user and not isCallerAdminOrCreator(caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
@@ -412,9 +414,7 @@ actor {
   // Referral System
 
   public shared ({ caller }) func createReferralCode(code : Text, validForNs : Time.Time) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can create referral codes");
-    };
+    ensureAdminOrCreator(caller);
     if (referralCodes.containsKey(code)) {
       Runtime.trap("Referral code already exists");
     };
@@ -426,17 +426,13 @@ actor {
   };
 
   public query ({ caller }) func getActiveReferralCodes() : async [ReferralCodeStatus] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can view all codes");
-    };
+    ensureAdminOrCreator(caller);
     let activeCodes = referralCodes.values().toArray();
     activeCodes.filter(func(c) { c.validUntil > Time.now() });
   };
 
   public shared ({ caller }) func revokeReferralCode(code : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can revoke codes");
-    };
+    ensureAdminOrCreator(caller);
     switch (referralCodes.get(code)) {
       case (null) { Runtime.trap("Referral code does not exist") };
       case (?_) { referralCodes.remove(code) };
@@ -490,67 +486,49 @@ actor {
   // Admin Data Management
 
   public shared ({ caller }) func setDepthChart(teamSportKey : Text, data : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     depthChartData.add(teamSportKey, data);
   };
 
   public shared ({ caller }) func setCoachingStyle(teamSportKey : Text, data : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     coachingStyles.add(teamSportKey, data);
   };
 
   public shared ({ caller }) func setInjuryReport(playerTeamKey : Text, data : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     injuryReports.add(playerTeamKey, data);
   };
 
   public shared ({ caller }) func setNewsFlag(key : Text, data : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     newsFlags.add(key, data);
   };
 
   public shared ({ caller }) func addUpcomingMatch(matchId : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     upcomingMatches.add(matchId);
   };
 
   public shared ({ caller }) func removeUpcomingMatch(matchId : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     upcomingMatches.remove(matchId);
   };
 
   // Prediction Management
 
   public shared ({ caller }) func createPrediction(prediction : Prediction.Prediction) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     predictionsById.add(prediction.id, prediction);
   };
 
   public shared ({ caller }) func updatePrediction(prediction : Prediction.Prediction) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     predictionsById.add(prediction.id, prediction);
   };
 
   public shared ({ caller }) func deletePrediction(predictionId : Text) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     predictionsById.remove(predictionId);
   };
 
@@ -618,46 +596,34 @@ actor {
   // Admin Data Retrieval
 
   public query ({ caller }) func getDepthChart(teamSportKey : Text) : async ?Text {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     depthChartData.get(teamSportKey);
   };
 
   public query ({ caller }) func getCoachingStyle(teamSportKey : Text) : async ?Text {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     coachingStyles.get(teamSportKey);
   };
 
   public query ({ caller }) func getInjuryReport(playerTeamKey : Text) : async ?Text {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     injuryReports.get(playerTeamKey);
   };
 
   public query ({ caller }) func getNewsFlag(key : Text) : async ?Text {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     newsFlags.get(key);
   };
 
   public query ({ caller }) func getUpcomingMatches() : async [Text] {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
-    };
+    ensureAdminOrCreator(caller);
     upcomingMatches.values().toArray();
   };
 
   // ------------ Live Scores Functionality ------------
 
   public shared ({ caller }) func updateLiveScore(gameId : GameId, score : LiveScore) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can update live scores");
-    };
+    ensureAdminOrCreator(caller);
     liveScores.add(gameId, score);
   };
 
@@ -713,9 +679,7 @@ actor {
   };
 
   public shared ({ caller }) func batchUpdateLiveScores(scores : [(GameId, LiveScore)]) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can perform batch updates");
-    };
+    ensureAdminOrCreator(caller);
 
     for ((gameId, score) in scores.values()) {
       liveScores.add(gameId, score);
@@ -723,16 +687,12 @@ actor {
   };
 
   public shared ({ caller }) func removeLiveScore(gameId : GameId) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can remove live scores");
-    };
+    ensureAdminOrCreator(caller);
     liveScores.remove(gameId);
   };
 
   public shared ({ caller }) func removeFinishedGames() : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
-      Runtime.trap("Unauthorized: Only admins can clean up scores");
-    };
+    ensureAdminOrCreator(caller);
 
     let filteredScores = liveScores.filter(
       func(gameId, score) { score.status != "final" }

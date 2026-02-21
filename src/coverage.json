@@ -1,49 +1,55 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T01:22:54.735Z",
+  "generatedAt": "2026-02-10T01:40:46.852Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 3,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-43",
-        "summary": "Update the Predictions list page to refresh predictions data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating and terms gating behavior unchanged.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/refetchIntervals.ts",
-          "frontend/src/pages/PredictionsPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/refetchIntervals.ts",
-          "frontend/src/pages/PredictionsPage.tsx"
-        ]
+        "id": "REQ-45",
+        "summary": "Update backend admin authorization so the configured creator principal (\"fjgwj-bolqk-glt6l-xwnqv-fqp2h-s3apm-4mrnu-ldzti-mctrg-uquqj-sqe\") is always treated as an admin-equivalent for all admin-only backend methods (e.g., Stripe configuration, referral code management, adminPremiumDiagnosis, manual premium grant/revoke, and prediction/data management), even if the creator principal is not present in the AccessControl admin set.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
-        "id": "REQ-44",
-        "summary": "Update the Prediction detail page to refresh the selected prediction data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating, terms gating, and live score updates unchanged.",
+        "id": "REQ-46",
+        "summary": "Ensure the backend method used by the frontend to determine admin access (actor.isCallerAdmin(), called by frontend/src/hooks/useAdmin.ts) returns true for the configured creator principal so the creator can always open the Admin page (including the Admin Support tab) after login.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-47",
+        "summary": "Verify and adjust frontend admin gating so that, after the backend changes, the creator principal can reliably access the Admin Dashboard route and use the existing Admin Support UI (including lookups) without seeing an \"Access Denied\" screen.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/PredictionDetailPage.tsx"
+          "frontend/src/components/AdminGate.tsx",
+          "frontend/src/hooks/useAdmin.ts",
+          "frontend/src/components/AppHeader.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/PredictionDetailPage.tsx"
+          "frontend/src/components/AdminGate.tsx",
+          "frontend/src/hooks/useAdmin.ts",
+          "frontend/src/components/AppHeader.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/PredictionDetailPage.tsx",
-    "frontend/src/pages/PredictionsPage.tsx",
-    "frontend/src/utils/refetchIntervals.ts",
+    "frontend/src/components/AdminGate.tsx",
+    "frontend/src/components/AppHeader.tsx",
+    "frontend/src/hooks/useAdmin.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

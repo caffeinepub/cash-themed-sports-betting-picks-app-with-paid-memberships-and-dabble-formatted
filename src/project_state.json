@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 25,
+  "projectStateVersion": 27,
   "summary": "Build a colorful, cash-themed sports betting predictions app with paid monthly/yearly memberships, AI-driven picks tailored to the Dabble platform, a tiered risk/reward presentation system, prominent disclaimers/terms (including no-guarantee and limited liability), optional Cash App–friendly UI elements like displaying a $Cashtag for manual tips (no direct Cash App integration), and always-live picks with real-time live scores (targeting sub-second updates).",
   "architectural_notes": [
     "Do not implement direct Cash App transfers or routing funds to a personal $Cashtag; only manual display of $Cashtag for optional tips/donations is allowed.",
@@ -12,7 +12,7 @@
   "known_issues": [
     "User requests their account to always have premium access (membership always active / always grant access), suggesting current premium status may not persist reliably."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-implement-paid-membership-plans-25-month-and-250-year-with-subscription-based-access-control-to-premium-prediction-content",
@@ -309,6 +309,14 @@
         "REQ-44"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-verify-and-adjust-frontend-admin-gating-so-that-after-the-backend-changes-the-creator-principal-can-reliably-access-the-admin-dashboard-route-and-use-the-existing-admin-support-ui-including-lookups-without-seeing-an-access-denied-screen",
+      "title": "Verify and adjust frontend admin gating so that, after the backend changes, the creator principal can reliably access the Admin Dashboard route and use the existing Admin Support UI (including lookups) without seeing an \"Access Denied\" screen.",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -462,6 +470,22 @@
       "id": "AR-23",
       "summary": "Update/refresh AI-generated Dabble-aligned predictions on a 30-minute cadence (instead of near-real-time), with the refresh schedule applied consistently wherever picks are displayed.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Update backend admin authorization so the configured creator principal (\"fjgwj-bolqk-glt6l-xwnqv-fqp2h-s3apm-4mrnu-ldzti-mctrg-uquqj-sqe\") is always treated as an admin-equivalent for all admin-only backend methods (e.g., Stripe configuration, referral code management, adminPremiumDiagnosis, manual premium grant/revoke, and prediction/data management), even if the creator principal is not present in the AccessControl admin set.",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Ensure the backend method used by the frontend to determine admin access (actor.isCallerAdmin(), called by frontend/src/hooks/useAdmin.ts) returns true for the configured creator principal so the creator can always open the Admin page (including the Admin Support tab) after login.",
+      "reqIds": [
+        "REQ-46"
+      ],
       "status": "pending"
     }
   ],

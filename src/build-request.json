@@ -1,67 +1,75 @@
 {
   "kind": "build_request",
-  "title": "Change predictions auto-refresh cadence to every 30 minutes",
+  "title": "Guarantee creator account has permanent premium access and full admin support access",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-43",
-      "text": "Update the Predictions list page to refresh predictions data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating and terms gating behavior unchanged.",
-      "target": "frontend",
+      "id": "REQ-45",
+      "text": "Update backend admin authorization so the configured creator principal (\"fjgwj-bolqk-glt6l-xwnqv-fqp2h-s3apm-4mrnu-ldzti-mctrg-uquqj-sqe\") is always treated as an admin-equivalent for all admin-only backend methods (e.g., Stripe configuration, referral code management, adminPremiumDiagnosis, manual premium grant/revoke, and prediction/data management), even if the creator principal is not present in the AccessControl admin set.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-messages-user-1"
         ],
         "quotes": [
-          "Use ai tools to make predictions based on dabble. Update predictions every 30 min"
+          "Make sure I always have access to premium membership and admin support"
         ]
       },
       "acceptanceCriteria": [
-        "When viewing /predictions, the predictions queries use a 30-minute refetch interval (1,800,000 ms) rather than 10,000 ms.",
-        "PremiumGate and TermsAcceptanceGate behavior on /predictions is unchanged (users without required access are still blocked appropriately).",
-        "Live score polling remains at its existing cadence and continues to update independently of predictions refresh."
+        "When the caller principal is exactly the configured creator principal string, admin-only backend methods succeed without trapping for missing #admin permission.",
+        "When the caller principal is not an admin and not the creator principal, admin-only backend methods continue to reject with an authorization error.",
+        "Premium gating behavior for non-admin/non-creator users is unchanged (still requires an active Stripe subscription, active referral, or manual premium)."
       ]
     },
     {
-      "id": "REQ-44",
-      "text": "Update the Prediction detail page to refresh the selected prediction data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating, terms gating, and live score updates unchanged.",
-      "target": "frontend",
+      "id": "REQ-46",
+      "text": "Ensure the backend method used by the frontend to determine admin access (actor.isCallerAdmin(), called by frontend/src/hooks/useAdmin.ts) returns true for the configured creator principal so the creator can always open the Admin page (including the Admin Support tab) after login.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-messages-user-1"
         ],
         "quotes": [
-          "Update predictions every 30 min"
+          "Make sure I always have access to premium membership and admin support"
         ]
       },
       "acceptanceCriteria": [
-        "When viewing /predictions/$id, the prediction query uses a 30-minute refetch interval (1,800,000 ms) rather than 10,000 ms.",
-        "The live score panel continues to update at its existing cadence and is not slowed down by the prediction refresh change.",
-        "All user-facing text remains in English."
+        "For the creator principal, actor.isCallerAdmin() returns true.",
+        "For a non-admin, non-creator principal, actor.isCallerAdmin() returns false (or continues to error and be treated as false by the frontend), preserving existing access restrictions.",
+        "The backend’s reported premium status (checkPremiumStatus) continues to return 'creator' for the creator principal and never returns 'none' for that principal."
+      ]
+    },
+    {
+      "id": "REQ-47",
+      "text": "Verify and adjust frontend admin gating so that, after the backend changes, the creator principal can reliably access the Admin Dashboard route and use the existing Admin Support UI (including lookups) without seeing an \"Access Denied\" screen.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-user-1"
+        ],
+        "quotes": [
+          "Make sure I always have access to premium membership and admin support"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Logging in as the creator principal allows navigation to the Admin Dashboard and all tabs (including Support) without being blocked by AdminGate.",
+        "The Admin Support lookup flow functions normally for creator/admin users (submits a principal ID, shows either a diagnostic report or a clear error message in English).",
+        "User-facing text introduced or modified as part of this change is in English."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/components/ui or any other frontend immutablePaths listed in SYSTEM_CONTEXT.",
-    "Keep Internet Identity as the authentication mechanism; do not add third-party auth.",
-    "Do not add any Dabble API integration; continue using the existing Dabble-aligned formatting approach."
+    "Backend must remain a single Motoko actor with all logic in backend/main.mo.",
+    "Do not edit any frontend files under frontend/src/components/ui or any paths listed in frontend.immutablePaths.",
+    "Keep existing premium gating semantics for non-admin/non-creator users unchanged."
   ],
   "nonGoals": [
-    "Changing the prediction-generation/scoring model logic or adding new prediction factors beyond what already exists.",
-    "Implementing real-time prediction regeneration on the backend; this change is limited to the client-side refresh cadence for fetching predictions.",
-    "Changing live-score polling cadence (it should remain as-is)."
+    "Adding new authentication methods beyond Internet Identity.",
+    "Adding new payment providers or changing subscription pricing/plans.",
+    "Building real-time chat, push notifications, or any external database integration."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

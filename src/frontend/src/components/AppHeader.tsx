@@ -9,12 +9,14 @@ import { useSubscription } from '../hooks/useSubscription';
 
 export default function AppHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { identity } = useInternetIdentity();
+  const { identity, isInitializing } = useInternetIdentity();
   const navigate = useNavigate();
-  const { data: isAdmin } = useIsAdmin();
+  const { data: isAdmin, isFetched } = useIsAdmin();
   const { hasActiveAccess } = useSubscription();
 
   const isAuthenticated = !!identity;
+  // Show admin link when definitively confirmed as admin
+  const showAdminLink = isAuthenticated && isFetched && isAdmin === true;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -69,7 +71,7 @@ export default function AppHeader() {
                 Account
               </Link>
             )}
-            {isAdmin && (
+            {showAdminLink && (
               <Link
                 to="/admin"
                 className="text-sm font-medium transition-colors hover:text-cash-gold"
@@ -137,7 +139,7 @@ export default function AppHeader() {
                 Account
               </Link>
             )}
-            {isAdmin && (
+            {showAdminLink && (
               <Link
                 to="/admin"
                 className="text-sm font-medium transition-colors hover:text-cash-gold"

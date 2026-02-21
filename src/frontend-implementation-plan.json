@@ -1,42 +1,31 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Update predictions auto-refresh cadence to 30 minutes",
+  "title": "Frontend admin gating reliability for creator principal",
   "requirements": [
     {
-      "id": "REQ-43",
-      "summary": "Change /predictions predictions-data polling to 30 minutes while keeping PremiumGate/TermsAcceptanceGate gating and live-score polling unchanged.",
+      "id": "REQ-47",
+      "summary": "Adjust frontend admin gating to rely on updated backend admin checks and prevent false \"Access Denied\" blocking for the creator on the Admin Dashboard (including Admin Support lookups).",
       "acceptanceCriteria": [
-        "When viewing /predictions, the predictions queries use a 30-minute refetch interval (1,800,000 ms) rather than 10,000 ms.",
-        "PremiumGate and TermsAcceptanceGate behavior on /predictions is unchanged (users without required access are still blocked appropriately).",
-        "Live score polling remains at its existing cadence and continues to update independently of predictions refresh."
+        "Logging in as the creator principal allows navigation to the Admin Dashboard and all tabs (including Support) without being blocked by AdminGate.",
+        "The Admin Support lookup flow functions normally for creator/admin users (submits a principal ID, shows either a diagnostic report or a clear error message in English).",
+        "User-facing text introduced or modified as part of this change is in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/refetchIntervals.ts",
-          "operation": "create",
-          "description": "Add shared refetch interval constants (including PREDICTIONS_REFETCH_INTERVAL_MS = 1800000) so both list/detail pages can reference the same 30-minute cadence."
+          "path": "frontend/src/components/AdminGate.tsx",
+          "operation": "modify",
+          "description": "Prevent premature \"Access Denied\" rendering when authentication/actor state is not ready (e.g., user not logged in yet, or admin status query not yet enabled). Add an authenticated-state-aware gate that (1) prompts login when unauthenticated, (2) shows a loading state while admin status is being resolved, and (3) only shows \"Access Denied\" once admin status has definitively resolved to false."
         },
         {
-          "path": "frontend/src/pages/PredictionsPage.tsx",
+          "path": "frontend/src/hooks/useAdmin.ts",
           "operation": "modify",
-          "description": "Update the React Query options passed to useGetAllPredictions and useGetPredictionsBySport to use the 30-minute predictions refetch interval constant (1,800,000 ms) instead of 10,000 ms, without altering PremiumGate/TermsAcceptanceGate wrappers or the useGetAllLiveScores polling behavior."
-        }
-      ]
-    },
-    {
-      "id": "REQ-44",
-      "summary": "Change /predictions/$id selected prediction polling to 30 minutes while keeping PremiumGate/TermsAcceptanceGate gating and live-score updates unchanged.",
-      "acceptanceCriteria": [
-        "When viewing /predictions/$id, the prediction query uses a 30-minute refetch interval (1,800,000 ms) rather than 10,000 ms.",
-        "The live score panel continues to update at its existing cadence and is not slowed down by the prediction refresh change.",
-        "All user-facing text remains in English."
-      ],
-      "file_operations": [
+          "description": "Harden the admin-status query behavior to improve reliability after backend changes: avoid treating transient actor/identity initialization states as a definitive non-admin result, ensure the query does not endlessly retry on authorization traps, and ensure the hook refetches appropriately after identity changes (without changing non-admin semantics)."
+        },
         {
-          "path": "frontend/src/pages/PredictionDetailPage.tsx",
+          "path": "frontend/src/components/AppHeader.tsx",
           "operation": "modify",
-          "description": "Update the React Query options passed to useGetPrediction to use the shared 30-minute predictions refetch interval constant (1,800,000 ms) instead of 10,000 ms, without changing PremiumGate/TermsAcceptanceGate wrappers or the useGetAllLiveScores polling cadence used by the live score panel."
+          "description": "Align Admin navigation link visibility with the improved admin gating behavior so the creator/admin can consistently see and navigate to the Admin route after login (avoid hiding the link due to transient unresolved admin status)."
         }
       ]
     }

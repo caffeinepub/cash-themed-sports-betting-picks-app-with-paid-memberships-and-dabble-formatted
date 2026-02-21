@@ -2,11 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-predictions-list-page-to-refresh-predictions-data-every-30-minutes-instead-of-the-current-10-second-interval-while-keeping-existing-premium-gating-and-terms-gating-behavior-unchanged",
-      "featureTitle": "Update the Predictions list page to refresh predictions data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating and terms gating behavior unchanged.",
+      "featureId": "feature-verify-and-adjust-frontend-admin-gating-so-that-after-the-backend-changes-the-creator-principal-can-reliably-access-the-admin-dashboard-route-and-use-the-existing-admin-support-ui-including-lookups-without-seeing-an-access-denied-screen",
+      "featureTitle": "Verify and adjust frontend admin gating so that, after the backend changes, the creator principal can reliably access the Admin Dashboard route and use the existing Admin Support UI (including lookups) without seeing an \"Access Denied\" screen.",
       "files": [
-        "frontend/src/pages/PredictionsPage.tsx",
-        "frontend/src/utils/refetchIntervals.ts"
+        "frontend/src/components/AdminGate.tsx",
+        "frontend/src/components/AppHeader.tsx",
+        "frontend/src/hooks/useAdmin.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,28 +20,7 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-43"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-prediction-detail-page-to-refresh-the-selected-prediction-data-every-30-minutes-instead-of-the-current-10-second-interval-while-keeping-existing-premium-gating-terms-gating-and-live-score-updates-unchanged",
-      "featureTitle": "Update the Prediction detail page to refresh the selected prediction data every 30 minutes (instead of the current 10-second interval) while keeping existing premium gating, terms gating, and live score updates unchanged.",
-      "files": [
-        "frontend/src/pages/PredictionDetailPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "stripe@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0"
-      ],
-      "testIds": [
-        "REQ-44"
+        "REQ-47"
       ],
       "confidence": "high"
     }
